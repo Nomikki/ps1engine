@@ -8,6 +8,10 @@
     - when loading image data, quantise it before rendering
       -> when rendering, apply only dither, not quantise
 
+    - check AABB boxes
+    - shared resources
+    - z buffer
+
 
 */
 #include <SFML/Graphics.hpp>
@@ -18,7 +22,7 @@
 
 #include <algorithm>
 #include "utility.hpp"
-//#include "meshManager.hpp"
+// #include "meshManager.hpp"
 #include "componentManager.hpp"
 #include "camera.hpp"
 
@@ -53,11 +57,10 @@ public:
   void calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp);
   void setSort(bool b);
   float getClock();
-  
-  // Mesh meshCube;
-  //Meshes meshes;
-  Components components;
 
+  // Mesh meshCube;
+  // Meshes meshes;
+  Components components;
 
   mat4x4 matProj;
 
@@ -69,6 +72,8 @@ public:
   std::vector<Triangle> vecTrianglesToRaster;
 
 private:
+  void renderDebugData();
+
   enum RenderMode
   {
     textured,
@@ -102,4 +107,6 @@ private:
   sf::Uint8 *px0;
   // sf::Uint8 *px1;
   sf::Uint8 *clearScreenPtr;
+
+  
 };

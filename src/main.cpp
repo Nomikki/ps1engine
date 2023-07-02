@@ -35,8 +35,8 @@ int main()
 
   Camera *camera = new Camera();
 
-  for (int k = 0; k < 20; k++)
-    for (int j = 0; j < 20; j++)
+  for (int k = 0; k < 10; k++)
+    for (int j = 0; j < 10; j++)
       renderer->components.createFromFile("spyro/spyro.obj", Vec3{-10.0f + (k * 2), 0, 5.0f + (j * 4)});
 
   const float cameraSpeed = 5;

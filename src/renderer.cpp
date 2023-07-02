@@ -6,7 +6,7 @@ Renderer::Renderer(int targetFPS, float scale, const char *title)
   height = 224;
 
   fpsCounter = 0;
-  fpsCounterMax = 100;
+  fpsCounterMax = 10;
   fpsLimit = targetFPS;
   this->scale = scale;
 
@@ -103,7 +103,6 @@ Renderer::~Renderer()
 void Renderer::clear()
 {
   memcpy(videoBuffer, clearScreenPtr, width * height * 3);
-
 }
 
 inline void Renderer::setPixel(int x, int y, Color &color)
@@ -597,9 +596,55 @@ void Renderer::copyVideoBuffer(uint8_t *buffer)
   }
 }
 
+void Renderer::renderDebugData()
+{
+
+  // render graphs
+  if (stData.fps_graph.size() > 1)
+  {
+    float max_fps = 0;
+    float min_fps = 10000;
+
+    for (int i = 0; i < stData.fps_graph.size() - 1; i++)
+    {
+      if (stData.fps_graph[i] > max_fps)
+        max_fps = stData.fps_graph[i];
+
+      if (stData.fps_graph[i] < min_fps)
+        min_fps = stData.fps_graph[i];
+    }
+
+    float normalized_fps_y = 0;
+    float normalized_fps_y_old = 0;
+
+    Color color_fps = {255, 255, 255};
+    Color color_borders = {128, 128, 128};
+
+    for (int i = 1; i < stData.fps_graph.size(); i++)
+    {
+      
+
+      normalized_fps_y_old = normalized_fps_y;
+
+      normalized_fps_y = 25 - (stData.fps_graph[i] / (max_fps + min_fps)) * 25;
+      normalized_fps_y = clamp2(normalized_fps_y, 0.0f, 25.0f);
+
+      if (i == 1)
+        normalized_fps_y_old = normalized_fps_y;
+
+      drawLine(i - 1, (int)normalized_fps_y_old, i, (int)normalized_fps_y, color_fps);
+    }
+
+    drawLine(0, 24, stData.graphSize, 24, color_borders);
+    drawLine(stData.graphSize, 0, stData.graphSize, 24, color_borders);
+  }
+}
+
 void Renderer::render(int debugMode)
 {
   window.clear(sf::Color(0, 80, 128));
+
+  renderDebugData();
 
   bool dither = false;
   if (dither)
@@ -623,12 +668,18 @@ void Renderer::render(int debugMode)
 
   if (debugMode)
   {
+    stData.graphSize = 48;
     dt += deltaTime;
     fpsCounter++;
     if (fpsCounter >= fpsCounterMax)
     {
       char titleText[32] = {0};
-      sprintf(titleText, "avg. FPS: %0.2f", 1.0 / (dt / (float)fpsCounter));
+      float fps = 1.0 / (dt / (float)fpsCounter);
+      sprintf(titleText, "avg. FPS: %0.2f", fps);
+
+      stData.fps_graph.push_back(fps);
+      if (stData.fps_graph.size() > stData.graphSize)
+        stData.fps_graph.erase(stData.fps_graph.begin() + 0);
 
       printf("%s\n", titleText);
       printf("Rendered triangles: %u\n", stData.numOfTriangles);

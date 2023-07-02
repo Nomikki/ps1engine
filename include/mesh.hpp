@@ -1,6 +1,11 @@
 #ifndef __MESH_H__
 #define __MESH_H__
 
+/*
+  Todo:
+  - create AABB boxes
+*/
+
 #include <vector>
 #include "utility.hpp"
 

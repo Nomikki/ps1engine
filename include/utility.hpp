@@ -44,9 +44,15 @@ struct mat4x4
   float m[4][4] = {0};
 };
 
+/*
+  - create function to normalize data
+  - no of triangles to graph
+*/
 struct StatisticData
 {
+  int graphSize;
   uint32_t numOfTriangles;
+  std::vector<float> fps_graph;
 };
 
 Color quantise(Color &color);
