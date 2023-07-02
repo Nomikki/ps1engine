@@ -1,6 +1,6 @@
-#include <renderer.hpp>
+#include <engine.hpp>
 
-void handleInputs(Renderer *renderer, Camera *camera, float cameraSpeed, float cameraTurning)
+void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float cameraTurning)
 {
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     camera->pos = Vector_Add(camera->pos, camera->vRight);
@@ -9,10 +9,10 @@ void handleInputs(Renderer *renderer, Camera *camera, float cameraSpeed, float c
     camera->pos = Vector_Sub(camera->pos, camera->vRight);
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
-    camera->pos.y -= cameraSpeed * renderer->getClock();
+    camera->pos.y -= cameraSpeed * engine->getClock();
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::F))
-    camera->pos.y += cameraSpeed * renderer->getClock();
+    camera->pos.y += cameraSpeed * engine->getClock();
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
     camera->pos = Vector_Add(camera->pos, camera->vForward);
@@ -21,37 +21,37 @@ void handleInputs(Renderer *renderer, Camera *camera, float cameraSpeed, float c
     camera->pos = Vector_Sub(camera->pos, camera->vForward);
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-    camera->yaw += cameraTurning * renderer->getClock();
+    camera->yaw += cameraTurning * engine->getClock();
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-    camera->yaw -= cameraTurning * renderer->getClock();
+    camera->yaw -= cameraTurning * engine->getClock();
 }
 
 int main()
 {
   // init
-  Renderer *renderer = new Renderer(0, 4, "PS1 clone");
-  renderer->setSort(true);
+  Engine *engine = new Engine(0, 4, "PS1 clone");
+  engine->setSort(true);
 
   Camera *camera = new Camera();
 
   for (int k = 0; k < 10; k++)
     for (int j = 0; j < 10; j++)
-      renderer->components.createFromFile("spyro/spyro.obj", Vec3{-10.0f + (k * 2), 0, 5.0f + (j * 4)});
+      engine->components.createFromFile("spyro/spyro.obj", Vec3{-10.0f + (k * 2), 0, 5.0f + (j * 4)});
 
   const float cameraSpeed = 5;
   const float cameraTurning = 1.0;
 
-  while (renderer->isOpen())
+  while (engine->isOpen())
   {
-    renderer->checkEvents();
+    engine->checkEvents();
 
-    handleInputs(renderer, camera, cameraSpeed, cameraTurning);
+    handleInputs(engine, camera, cameraSpeed, cameraTurning);
 
-    camera->Update(cameraSpeed * renderer->getClock());
-    renderer->calculateTriangles(camera->pos, camera->vTarget, camera->vUp);
-    renderer->renderAll();
+    camera->Update(cameraSpeed * engine->getClock());
+    engine->calculateTriangles(camera->pos, camera->vTarget, camera->vUp);
+    engine->renderAll();
   }
 
-  delete renderer;
+  delete engine;
 }

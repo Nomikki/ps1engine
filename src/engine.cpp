@@ -1,6 +1,6 @@
-#include <renderer.hpp>
+#include <engine.hpp>
 
-Renderer::Renderer(int targetFPS, float scale, const char *title)
+Engine::Engine(int targetFPS, float scale, const char *title)
 {
   width = 256;
   height = 224;
@@ -89,7 +89,7 @@ Renderer::Renderer(int targetFPS, float scale, const char *title)
   rMode = RenderMode::textured;
 }
 
-Renderer::~Renderer()
+Engine::~Engine()
 {
   if (videoBuffer != nullptr)
     delete videoBuffer;
@@ -100,12 +100,12 @@ Renderer::~Renderer()
   videoBufferBack = nullptr;
 }
 
-void Renderer::clear()
+void Engine::clear()
 {
   memcpy(videoBuffer, clearScreenPtr, width * height * 3);
 }
 
-inline void Renderer::setPixel(int x, int y, Color &color)
+inline void Engine::setPixel(int x, int y, Color &color)
 {
 
   uint32_t offset = (y * width + x) * 3;
@@ -114,7 +114,7 @@ inline void Renderer::setPixel(int x, int y, Color &color)
   videoBuffer[offset + 2] = color.b;
 }
 
-inline void Renderer::setPixelTo(int x, int y, Color &color, uint8_t *buffer)
+inline void Engine::setPixelTo(int x, int y, Color &color, uint8_t *buffer)
 {
 
   uint32_t offset = (y * width + x) * 3;
@@ -124,13 +124,13 @@ inline void Renderer::setPixelTo(int x, int y, Color &color, uint8_t *buffer)
   buffer[offset + 2] = color.b;
 }
 
-inline Color Renderer::getPixelFrom(int x, int y, uint8_t *buffer)
+inline Color Engine::getPixelFrom(int x, int y, uint8_t *buffer)
 {
   uint32_t offset = (y * width + x) * 3;
   return {buffer[offset], buffer[offset + 1], buffer[offset + 2]};
 }
 
-void Renderer::Dither_FloydSteinberg()
+void Engine::Dither_FloydSteinberg()
 {
 
   // pDest->copy(*pSource, 0, 0);
@@ -208,7 +208,7 @@ void Renderer::Dither_FloydSteinberg()
   }
 }
 
-void Renderer::drawLine(int sx, int sy, int ex, int ey, Color color)
+void Engine::drawLine(int sx, int sy, int ex, int ey, Color color)
 {
 
   float x{ex - sx}, y{ey - sy};
@@ -225,7 +225,7 @@ void Renderer::drawLine(int sx, int sy, int ex, int ey, Color color)
   }
 }
 
-void Renderer::texturedTriangle(Vec3 &t1, UV &uv1,
+void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
                                 Vec3 &t2, UV &uv2,
                                 Vec3 &t3, UV &uv3,
                                 sf::Image &img, Color &color)
@@ -425,7 +425,7 @@ void Renderer::texturedTriangle(Vec3 &t1, UV &uv1,
   stData.numOfTriangles++;
 }
 
-void Renderer::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color)
+void Engine::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color)
 {
 
   drawLine(x1, y1, x2, y2, color);
@@ -433,7 +433,7 @@ void Renderer::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Colo
   drawLine(x1, y1, x3, y3, color);
 }
 
-void Renderer::fillTriangle(Vec3 &t1, Vec3 &t2, Vec3 &t3, Color color)
+void Engine::fillTriangle(Vec3 &t1, Vec3 &t2, Vec3 &t3, Color color)
 {
 
   Vec3 AUX;
@@ -535,7 +535,7 @@ void Renderer::fillTriangle(Vec3 &t1, Vec3 &t2, Vec3 &t3, Color color)
   stData.numOfTriangles++;
 }
 
-void Renderer::renderTriangle(Triangle &triangle)
+void Engine::renderTriangle(Triangle &triangle)
 {
   switch (rMode)
   {
@@ -558,17 +558,17 @@ void Renderer::renderTriangle(Triangle &triangle)
   };
 }
 
-float Renderer::getClock()
+float Engine::getClock()
 {
   return deltaTime;
 }
 
-bool Renderer::isOpen()
+bool Engine::isOpen()
 {
   return window.isOpen();
 }
 
-void Renderer::checkEvents()
+void Engine::checkEvents()
 {
   sf::Event event{};
   while (window.pollEvent(event))
@@ -578,7 +578,7 @@ void Renderer::checkEvents()
   }
 }
 
-void Renderer::copyVideoBuffer(uint8_t *buffer)
+void Engine::copyVideoBuffer(uint8_t *buffer)
 {
   for (int y = 0; y < height; y++)
   {
@@ -596,7 +596,7 @@ void Renderer::copyVideoBuffer(uint8_t *buffer)
   }
 }
 
-void Renderer::renderDebugData()
+void Engine::renderDebugData()
 {
 
   // render graphs
@@ -640,7 +640,7 @@ void Renderer::renderDebugData()
   }
 }
 
-void Renderer::render(int debugMode)
+void Engine::render(int debugMode)
 {
   window.clear(sf::Color(0, 80, 128));
 
@@ -707,7 +707,7 @@ void Renderer::render(int debugMode)
   stData.numOfTriangles = 0;
 }
 
-void Renderer::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
+void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
 {
   vecTrianglesToRaster.clear();
 
@@ -824,7 +824,7 @@ void Renderer::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
   }
 }
 
-void Renderer::rasterize()
+void Engine::rasterize()
 {
   for (auto &triToRaster : vecTrianglesToRaster)
   {
@@ -885,13 +885,13 @@ void Renderer::rasterize()
   }
 }
 
-void Renderer::renderAll()
+void Engine::renderAll()
 {
   rasterize();
   render(1);
 }
 
-void Renderer::setSort(bool b)
+void Engine::setSort(bool b)
 {
   useSort = b;
 }

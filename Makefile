@@ -3,7 +3,7 @@ LDLINKS := -lsfml-graphics -lsfml-window -lsfml-system
 
 all:
 
-CFILES  := main.cpp renderer.cpp utility.cpp mesh.cpp meshManager.cpp component.cpp \
+CFILES  := main.cpp engine.cpp utility.cpp mesh.cpp meshManager.cpp component.cpp \
 					componentManager.cpp transform.cpp camera.cpp
 COMPILER := g++
 SRCDIR := src

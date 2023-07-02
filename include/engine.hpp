@@ -26,11 +26,11 @@
 #include "componentManager.hpp"
 #include "camera.hpp"
 
-class Renderer
+class Engine
 {
 public:
-  Renderer(int targetFPS = 60, float scale = 1, const char *title = "Unknow app");
-  ~Renderer();
+  Engine(int targetFPS = 60, float scale = 1, const char *title = "Unknow app");
+  ~Engine();
 
   inline void setPixel(int x, int y, Color &color);
   inline Color getPixelFrom(int x, int y, uint8_t *buffer);
