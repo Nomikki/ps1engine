@@ -31,7 +31,7 @@ int main()
 {
   // init
   Engine *engine = new Engine(0, 4, "PS1 clone");
-  engine->setSort(true);
+  engine->setSort(false);
 
   Camera *camera = new Camera();
 

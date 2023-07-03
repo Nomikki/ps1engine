@@ -39,9 +39,9 @@ public:
   void drawLine(int sx, int sy, int ex, int ey, Color color);
   void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color);
   void fillTriangle(Vec3 &t1, Vec3 &t2, Vec3 &t3, Color color);
-  void texturedTriangle(Vec3 &t1, UV &uv1,
-                        Vec3 &t2, UV &uv2,
-                        Vec3 &t3, UV &uv3,
+  void texturedTriangle(Vec3 &t1, UV &uv1,  float w1,
+                        Vec3 &t2, UV &uv2,  float w2,
+                        Vec3 &t3, UV &uv3,  float w3,
                         sf::Image &img, Color &color);
 
   void renderTriangle(Triangle &triangle);
@@ -107,6 +107,8 @@ private:
   sf::Uint8 *px0;
   // sf::Uint8 *px1;
   sf::Uint8 *clearScreenPtr;
+
+  float *pDepthBuffer = nullptr;
 
   
 };

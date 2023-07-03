@@ -22,9 +22,10 @@ Engine::Engine(int targetFPS, float scale, const char *title)
     for (int x = 0; x < width; x++)
     {
       screenBuffer.setPixel(x, y, sf::Color::Black);
-      // screenBuffer2.setPixel(x, y, sf::Color::Black);
     }
   }
+
+  pDepthBuffer = new float[width * height];
 
   videoBuffer = new uint8_t[width * height * 3];
   videoBufferBack = new uint8_t[width * height * 3];
@@ -98,11 +99,19 @@ Engine::~Engine()
   if (videoBufferBack != nullptr)
     delete videoBufferBack;
   videoBufferBack = nullptr;
+
+  if (pDepthBuffer != nullptr)
+    delete pDepthBuffer;
+  pDepthBuffer = nullptr;
 }
 
 void Engine::clear()
 {
   memcpy(videoBuffer, clearScreenPtr, width * height * 3);
+  for (int i = 0; i < width * height; i++)
+  {
+    pDepthBuffer[i] = 0;
+  }
 }
 
 inline void Engine::setPixel(int x, int y, Color &color)
@@ -225,10 +234,10 @@ void Engine::drawLine(int sx, int sy, int ex, int ey, Color color)
   }
 }
 
-void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
-                                Vec3 &t2, UV &uv2,
-                                Vec3 &t3, UV &uv3,
-                                sf::Image &img, Color &color)
+void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
+                              Vec3 &t2, UV &uv2, float w2,
+                              Vec3 &t3, UV &uv3, float w3,
+                              sf::Image &img, Color &color)
 {
 
   int x1 = t1.x;
@@ -253,6 +262,7 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
     std::swap(x1, x2);
     std::swap(u1, u2);
     std::swap(v1, v2);
+    std::swap(w1, w2);
   }
 
   if (y3 < y1)
@@ -261,6 +271,7 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
     std::swap(x1, x3);
     std::swap(u1, u3);
     std::swap(v1, v3);
+    std::swap(w1, w3);
   }
 
   if (y3 < y2)
@@ -269,26 +280,31 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
     std::swap(x2, x3);
     std::swap(u2, u3);
     std::swap(v2, v3);
+    std::swap(w2, w3);
   }
 
   int dy1 = y2 - y1;
   int dx1 = x2 - x1;
   float dv1 = v2 - v1;
   float du1 = u2 - u1;
+  float dw1 = w2 - w1;
 
   int dy2 = y3 - y1;
   int dx2 = x3 - x1;
   float dv2 = v3 - v1;
   float du2 = u3 - u1;
+  float dw2 = w3 - w1;
 
-  float tex_u, tex_v, tex_w, tex_h;
+  float tex_u, tex_v, tex_ww, tex_hh;
+  float tex_w;
 
-  tex_w = img.getSize().x;
-  tex_h = img.getSize().y;
+  tex_ww = img.getSize().x;
+  tex_hh = img.getSize().y;
 
   float dax_step = 0, dbx_step = 0,
         du1_step = 0, dv1_step = 0,
-        du2_step = 0, dv2_step = 0;
+        du2_step = 0, dv2_step = 0,
+        dw1_step = 0, dw2_step = 0;
 
   if (dy1)
     dax_step = dx1 / (float)abs(dy1);
@@ -299,11 +315,15 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
     du1_step = du1 / (float)abs(dy1);
   if (dy1)
     dv1_step = dv1 / (float)abs(dy1);
+  if (dy1)
+    dw1_step = dw1 / (float)abs(dy1);
 
   if (dy2)
     du2_step = du2 / (float)abs(dy2);
   if (dy2)
     dv2_step = dv2 / (float)abs(dy2);
+  if (dy2)
+    dw2_step = dw2 / (float)abs(dy2);
 
   if (dy1)
   {
@@ -314,19 +334,23 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
 
       float tex_su = u1 + (float)(i - y1) * du1_step;
       float tex_sv = v1 + (float)(i - y1) * dv1_step;
+      float tex_sw = w1 + (float)(i - y1) * dw1_step;
 
       float tex_eu = u1 + (float)(i - y1) * du2_step;
       float tex_ev = v1 + (float)(i - y1) * dv2_step;
+      float tex_ew = w1 + (float)(i - y1) * dw2_step;
 
       if (ax > bx)
       {
         std::swap(ax, bx);
         std::swap(tex_su, tex_eu);
         std::swap(tex_sv, tex_ev);
+        std::swap(tex_sw, tex_ew);
       }
 
       tex_u = tex_su;
       tex_v = tex_sv;
+      tex_w = tex_sw;
 
       float tstep = 1.0f / ((float)(bx - ax));
       float t = 0.0f;
@@ -335,21 +359,32 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
       {
         tex_u = (1.0f - t) * tex_su + t * tex_eu;
         tex_v = (1.0f - t) * tex_sv + t * tex_ev;
+        tex_w = (1.0f - t) * tex_sw + t * tex_ew;
 
-        tex_v = 1.0f - tex_v;
+        tex_v = 1.0f - tex_v; // flip it!
 
-        Color col;
-        sf::Color c = img.getPixel((int)(tex_u * tex_w), (int)(tex_v * tex_h));
+        if (tex_w > pDepthBuffer[i * width + j])
+        {
+          Color col;
+          sf::Color c = img.getPixel((int)(tex_u * tex_ww), (int)(tex_v * tex_hh));
 
-        float cr = color.r / 255.0;
-        float cg = color.g / 255.0;
-        float cb = color.b / 255.0;
+          float cr = color.r / 255.0;
+          float cg = color.g / 255.0;
+          float cb = color.b / 255.0;
 
-        col.r = (uint8_t)(c.r * cr);
-        col.g = (uint8_t)(c.g * cg);
-        col.b = (uint8_t)(c.b * cb);
+          col.r = (uint8_t)(c.r * cr);
+          col.g = (uint8_t)(c.g * cg);
+          col.b = (uint8_t)(c.b * cb);
 
-        setPixel(j, i, col);
+          /*
+          int ck = std::clamp(tex_w, 0.0f, 1.0f)*255;
+          col.r = (uint8_t)(ck);
+          col.g = (uint8_t)(ck);
+          col.b = (uint8_t)(ck);
+          */
+          setPixel(j, i, col);
+          pDepthBuffer[i * width + j] = tex_w;
+        }
 
         t += tstep;
       }
@@ -360,6 +395,7 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
   dx1 = x3 - x2;
   dv1 = v3 - v2;
   du1 = u3 - u2;
+  dw1 = w3 - w2;
 
   if (dy1)
     dax_step = dx1 / (float)abs(dy1);
@@ -371,6 +407,8 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
     du1_step = du1 / (float)abs(dy1);
   if (dy1)
     dv1_step = dv1 / (float)abs(dy1);
+  if (dy1)
+    dw1_step = dw1 / (float)abs(dy1);
 
   if (dy1)
   {
@@ -381,19 +419,23 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
 
       float tex_su = u2 + (float)(i - y2) * du1_step;
       float tex_sv = v2 + (float)(i - y2) * dv1_step;
+      float tex_sw = w2 + (float)(i - y2) * dw1_step;
 
       float tex_eu = u1 + (float)(i - y1) * du2_step;
       float tex_ev = v1 + (float)(i - y1) * dv2_step;
+      float tex_ew = w1 + (float)(i - y1) * dw2_step;
 
       if (ax > bx)
       {
         std::swap(ax, bx);
         std::swap(tex_su, tex_eu);
         std::swap(tex_sv, tex_ev);
+        std::swap(tex_sw, tex_ew);
       }
 
       tex_u = tex_su;
       tex_v = tex_sv;
+      tex_w = tex_sw;
 
       float tstep = 1.0f / ((float)(bx - ax));
       float t = 0.0f;
@@ -404,18 +446,32 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1,
         tex_v = (1.0f - t) * tex_sv + t * tex_ev;
         tex_v = 1.0f - tex_v;
 
-        Color col;
-        sf::Color c = img.getPixel((int)(tex_u * tex_w), (int)(tex_v * tex_h));
+        tex_w = (1.0f - t) * tex_sw + t * tex_ew;
 
-        float cr = color.r / 255.0;
-        float cg = color.g / 255.0;
-        float cb = color.b / 255.0;
+        if (tex_w > pDepthBuffer[i * width + j])
+        {
 
-        col.r = (uint8_t)(c.r * cr);
-        col.g = (uint8_t)(c.g * cg);
-        col.b = (uint8_t)(c.b * cb);
+          Color col;
+          sf::Color c = img.getPixel((int)(tex_u * tex_ww), (int)(tex_v * tex_hh));
 
-        setPixel(j, i, col);
+          float cr = color.r / 255.0;
+          float cg = color.g / 255.0;
+          float cb = color.b / 255.0;
+
+          col.r = (uint8_t)(c.r * cr);
+          col.g = (uint8_t)(c.g * cg);
+          col.b = (uint8_t)(c.b * cb);
+
+          /*
+          int ck = std::clamp(tex_w, 0.0f, 1.0f)*255;
+          col.r = (uint8_t)(ck);
+          col.g = (uint8_t)(ck);
+          col.b = (uint8_t)(ck);
+          */
+
+          setPixel(j, i, col);
+          pDepthBuffer[i * width + j] = tex_w;
+        }
 
         t += tstep;
       }
@@ -540,9 +596,9 @@ void Engine::renderTriangle(Triangle &triangle)
   switch (rMode)
   {
   case RenderMode::textured:
-    texturedTriangle(triangle.p[0], triangle.t[0],
-                     triangle.p[1], triangle.t[1],
-                     triangle.p[2], triangle.t[2],
+    texturedTriangle(triangle.p[0], triangle.t[0], triangle.t[0].w,
+                     triangle.p[1], triangle.t[1], triangle.t[1].w,
+                     triangle.p[2], triangle.t[2], triangle.t[2].w,
                      textureImage, triangle.color);
     break;
   case RenderMode::filled:
@@ -622,7 +678,6 @@ void Engine::renderDebugData()
 
     for (int i = 1; i < stData.fps_graph.size(); i++)
     {
-      
 
       normalized_fps_y_old = normalized_fps_y;
 
@@ -786,9 +841,44 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
             triProjected.t[1] = clipped[n].t[1];
             triProjected.t[2] = clipped[n].t[2];
 
+            /*
             triProjected.p[0] = Vector_Div(triProjected.p[0], triProjected.p[0].w);
             triProjected.p[1] = Vector_Div(triProjected.p[1], triProjected.p[1].w);
             triProjected.p[2] = Vector_Div(triProjected.p[2], triProjected.p[2].w);
+            */
+
+            /*
+            triProjected.t[0].u = triProjected.t[0].u / triProjected.p[0].w;
+            triProjected.t[1].u = triProjected.t[1].u / triProjected.p[1].w;
+            triProjected.t[2].u = triProjected.t[2].u / triProjected.p[2].w;
+
+            triProjected.t[0].v = triProjected.t[0].v / triProjected.p[0].w;
+            triProjected.t[1].v = triProjected.t[1].v / triProjected.p[1].w;
+            triProjected.t[2].v = triProjected.t[2].v / triProjected.p[2].w;
+            */
+
+            triProjected.t[0].w = 1.0f / triProjected.p[0].w;
+            triProjected.t[1].w = 1.0f / triProjected.p[1].w;
+            triProjected.t[2].w = 1.0f / triProjected.p[2].w;
+
+            // Scale into view, we moved the normalising into cartesian space
+            // out of the matrix.vector function from the previous videos, so
+            // do this manually
+            triProjected.p[0] = Vector_Div(triProjected.p[0], triProjected.p[0].w);
+            triProjected.p[1] = Vector_Div(triProjected.p[1], triProjected.p[1].w);
+            triProjected.p[2] = Vector_Div(triProjected.p[2], triProjected.p[2].w);
+
+            // X/Y are inverted so put them back
+            /*
+            triProjected.p[0].x *= -1.0f;
+            triProjected.p[1].x *= -1.0f;
+            triProjected.p[2].x *= -1.0f;
+            triProjected.p[0].y *= -1.0f;
+            triProjected.p[1].y *= -1.0f;
+            triProjected.p[2].y *= -1.0f;
+            */
+
+            // normal ->
 
             // offset verts into visible normalised space
             Vec3 vOffsetView = {1, 1, 0};
