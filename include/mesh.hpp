@@ -13,6 +13,7 @@ struct Mesh
 {
   std::vector<Triangle> tris;
   bool LoadObjFromFile(std::string filename);
+  int textureID;
 };
 
 #endif // __MESH_H__

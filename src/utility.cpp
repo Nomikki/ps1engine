@@ -1,6 +1,5 @@
 #include "utility.hpp"
 
-
 Vec3 Matrix_MultiplyVector(mat4x4 &m, Vec3 &i)
 {
   Vec3 v;
@@ -300,6 +299,7 @@ int Triangle_CLipAgainstPlane(Vec3 &plane_p, Vec3 &plane_n, Triangle &in_tri, Tr
 
     // Copy appearance info to new triangle
     out_tri1.color = in_tri.color;
+    out_tri1.textureID = in_tri.textureID;
 
     // The inside point is valid, so keep that...
     out_tri1.p[0] = *inside_points[0];
@@ -312,13 +312,11 @@ int Triangle_CLipAgainstPlane(Vec3 &plane_p, Vec3 &plane_n, Triangle &in_tri, Tr
     out_tri1.t[1].u = t * (outside_tex[0]->u - inside_tex[0]->u) + inside_tex[0]->u;
     out_tri1.t[1].v = t * (outside_tex[0]->v - inside_tex[0]->v) + inside_tex[0]->v;
     out_tri1.t[1].w = t * (outside_tex[0]->w - inside_tex[0]->w) + inside_tex[0]->w;
-    
 
     out_tri1.p[2] = Vector_IntersectPlane(plane_p, plane_n, *inside_points[0], *outside_points[1], t);
     out_tri1.t[2].u = t * (outside_tex[1]->u - inside_tex[0]->u) + inside_tex[0]->u;
     out_tri1.t[2].v = t * (outside_tex[1]->v - inside_tex[0]->v) + inside_tex[0]->v;
     out_tri1.t[2].w = t * (outside_tex[1]->w - inside_tex[0]->w) + inside_tex[0]->w;
-
 
     return 1; // Return the newly formed single triangle
   }
@@ -331,8 +329,10 @@ int Triangle_CLipAgainstPlane(Vec3 &plane_p, Vec3 &plane_n, Triangle &in_tri, Tr
 
     // Copy appearance info to new triangles
     out_tri1.color = in_tri.color;
+    out_tri1.textureID = in_tri.textureID;
 
     out_tri2.color = in_tri.color;
+    out_tri2.textureID = in_tri.textureID;
 
     // The first triangle consists of the two inside points and a new
     // point determined by the location where one side of the triangle
@@ -348,7 +348,6 @@ int Triangle_CLipAgainstPlane(Vec3 &plane_p, Vec3 &plane_n, Triangle &in_tri, Tr
     out_tri1.t[2].v = t * (outside_tex[0]->v - inside_tex[0]->v) + inside_tex[0]->v;
     out_tri1.t[2].w = t * (outside_tex[0]->w - inside_tex[0]->w) + inside_tex[0]->w;
 
-
     // The second triangle is composed of one of he inside points, a
     // new point determined by the intersection of the other side of the
     // triangle and the plane, and the newly created point above
@@ -360,11 +359,10 @@ int Triangle_CLipAgainstPlane(Vec3 &plane_p, Vec3 &plane_n, Triangle &in_tri, Tr
     out_tri2.t[2].u = t * (outside_tex[0]->u - inside_tex[1]->u) + inside_tex[1]->u;
     out_tri2.t[2].v = t * (outside_tex[0]->v - inside_tex[1]->v) + inside_tex[1]->v;
     out_tri2.t[2].w = t * (outside_tex[0]->w - inside_tex[1]->w) + inside_tex[1]->w;
-    
+
     return 2; // Return two newly formed triangles which form a quad
   }
 }
-
 
 Color quantise(Color &color)
 {
@@ -388,4 +386,15 @@ float max(float a, float b)
 void printVector(Vec3 &v)
 {
   printf("%0.2f, %0.2f, %0.2f\n", v.x, v.y, v.z);
+}
+
+Color mixRGB(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, float v)
+{
+  Color c;
+
+  c.r = (r1 * v) + (r2 * (1 - v));
+  c.g = (g1 * v) + (g2 * (1 - v));
+  c.b = (b1 * v) + (b2 * (1 - v));
+
+  return c;
 }

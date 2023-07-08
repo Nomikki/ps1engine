@@ -10,8 +10,9 @@ Component::~Component()
 {
 }
 
-bool Component::createMeshFromFile(std::string filename) {
+bool Component::createMeshFromFile(std::string filename, int textureID) {
   Mesh m;
   meshes.meshes.push_back(m);
+  meshes.meshes[0].textureID = textureID;
   return meshes.meshes[0].LoadObjFromFile(filename);
 }

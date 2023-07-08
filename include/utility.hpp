@@ -38,6 +38,7 @@ struct Triangle
   Vec3 p[3];
   UV t[3];
   Color color;
+  int textureID;
 };
 
 struct mat4x4
@@ -52,7 +53,8 @@ struct mat4x4
 struct StatisticData
 {
   int graphSize;
-  uint32_t numOfTriangles;
+  uint32_t numOfTrianglesPerFrame;
+  uint32_t numOfTrianglesPerSecond;
   std::vector<float> fps_graph;
 };
 
@@ -95,5 +97,6 @@ t clamp2(t x, t min, t max)
 
 float max(float a, float b);
 void printVector(Vec3 &v);
+Color mixRGB(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, float v);
 
 #endif // __UTILITY_H__

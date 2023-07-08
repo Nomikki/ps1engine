@@ -30,14 +30,20 @@ void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float camer
 int main()
 {
   // init
-  Engine *engine = new Engine(0, 4, "PS1 clone");
+  Engine *engine = new Engine(25, 4, "PS1 clone");
   engine->setSort(false);
+  engine->LoadTexture("Spyro/Glimmer_ObjectTextures.png");
+  engine->LoadTexture("High.png");
+
+
 
   Camera *camera = new Camera();
 
-  for (int k = 0; k < 10; k++)
-    for (int j = 0; j < 10; j++)
-      engine->components.createFromFile("spyro/spyro.obj", Vec3{-10.0f + (k * 2), 0, 5.0f + (j * 4)});
+  for (int k = 0; k < 1; k++)
+    for (int j = 0; j < 2; j++)
+      engine->components.createFromFile("spyro/spyro.obj", 0, Vec3{-10.0f + (k * 2), 0, 5.0f + (j * 4)});
+
+  engine->components.createFromFile("Artisans Hub.obj", 1, Vec3{0, 0, 0});
 
   const float cameraSpeed = 5;
   const float cameraTurning = 1.0;
@@ -52,6 +58,8 @@ int main()
     engine->calculateTriangles(camera->pos, camera->vTarget, camera->vUp);
     engine->renderAll();
   }
+  
+
 
   delete engine;
 }

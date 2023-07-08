@@ -5,6 +5,10 @@ Engine::Engine(int targetFPS, float scale, const char *title)
   width = 256;
   height = 224;
 
+  fogColor = {128,160, 192};
+  fogW = 10;
+  clipEnd = 0.01f;
+
   fpsCounter = 0;
   fpsCounterMax = 10;
   fpsLimit = targetFPS;
@@ -47,32 +51,13 @@ Engine::Engine(int targetFPS, float scale, const char *title)
     for (int x = 0; x < width; x++)
     {
       int i = (y * width + x) * 3;
-      clearScreenPtr[i] = 0x10;
-      clearScreenPtr[i + 1] = 0x10;
-      clearScreenPtr[i + 2] = 0x10;
+      clearScreenPtr[i] = fogColor.r;
+      clearScreenPtr[i + 1] = fogColor.g;
+      clearScreenPtr[i + 2] = fogColor.b;
     }
   }
 
   // components.createFromFile("spyro/spyro.obj", {1, 0, 5});
-
-  sf::Image tempImage;
-  if (!tempImage.loadFromFile("spyro/Glimmer_ObjectTextures.png"))
-  {
-    printf("test.png not found.\n");
-  }
-  textureImage.create(tempImage.getSize().x, tempImage.getSize().y);
-
-  for (int y = 0; y < textureImage.getSize().y; y++)
-  {
-    for (int x = 0; x < textureImage.getSize().x; x++)
-    {
-      sf::Color col = tempImage.getPixel(x, y);
-      Color c = {col.r, col.g, col.b};
-      c = quantise(c);
-
-      textureImage.setPixel(x, y, {c.r, c.g, c.b});
-    }
-  }
 
   // projection matrix
   /*
@@ -81,13 +66,47 @@ Engine::Engine(int targetFPS, float scale, const char *title)
     0,  0,  f1, f2
     0,  0,  1,  0
   */
-  float fNear = 0.1f;
-  float fFar = 1000.0f;
-  float fFov = 75.0f;
+  float fNear = 0.01f;
+  float fFar = 100.0f;
+  float fFov = 45.0f;
   float fAspectRatio = (float)height / (float)width;
 
   matProj = Matrix_MakeProjection(fFov, fAspectRatio, fNear, fFar);
   rMode = RenderMode::textured;
+}
+
+int Engine::LoadTexture(std::string filename)
+{
+
+  sf::Image tempImage;
+
+  if (tempImage.loadFromFile(filename))
+  {
+    sf::Image im;
+    im.create(tempImage.getSize().x, tempImage.getSize().y);
+    textureImage.push_back(im);
+  }
+
+  if (!textureImage[textureImage.size() - 1].loadFromFile(filename))
+  {
+    printf("'%s' not found.\n", (char *)filename.c_str());
+  }
+
+  // textureImage.create(tempImage.getSize().x, tempImage.getSize().y);
+
+  for (int y = 0; y < textureImage[textureImage.size() - 1].getSize().y; y++)
+  {
+    for (int x = 0; x < textureImage[textureImage.size() - 1].getSize().x; x++)
+    {
+      sf::Color col = tempImage.getPixel(x, y);
+      Color c = {col.r, col.g, col.b};
+      c = quantise(c);
+
+      textureImage[textureImage.size() - 1].setPixel(x, y, {c.r, c.g, c.b});
+    }
+  }
+
+  return textureImage.size() - 1;
 }
 
 Engine::~Engine()
@@ -108,6 +127,8 @@ Engine::~Engine()
 void Engine::clear()
 {
   memcpy(videoBuffer, clearScreenPtr, width * height * 3);
+  memcpy(videoBufferBack, clearScreenPtr, width * height * 3);
+
   for (int i = 0; i < width * height; i++)
   {
     pDepthBuffer[i] = 0;
@@ -146,7 +167,7 @@ void Engine::Dither_FloydSteinberg()
   int32_t w = width;
   int32_t h = height;
 
-  memcpy(videoBufferBack, videoBuffer, w * h * 3);
+  memcpy(videoBufferBack, videoBuffer, w*h*3);
 
   constexpr float step = 16.0;
   constexpr float step1 = 7.0f / step;
@@ -164,9 +185,9 @@ void Engine::Dither_FloydSteinberg()
   Color p;
   int px, py;
 
-  for (int y = 0; y < h; y++)
+  for (int y = 1; y < h-1; y++)
   {
-    for (int x = 0; x < w; x++)
+    for (int x = 1; x < w-1; x++)
     {
 
       pixel = getPixelFrom(x, y, videoBufferBack); // pDest->getPixel(x, y);
@@ -240,6 +261,8 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
                               sf::Image &img, Color &color)
 {
 
+  
+  
   int x1 = t1.x;
   int x2 = t2.x;
   int x3 = t3.x;
@@ -376,6 +399,12 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
           col.g = (uint8_t)(c.g * cg);
           col.b = (uint8_t)(c.b * cb);
 
+
+          float w = std::clamp((tex_w/0.5f) * fogW, 0.0f, 1.0f);
+          
+          col = mixRGB(col.r, col.g, col.b, fogColor.r, fogColor.g, fogColor.b, w); 
+
+
           /*
           int ck = std::clamp(tex_w, 0.0f, 1.0f)*255;
           col.r = (uint8_t)(ck);
@@ -462,6 +491,11 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
           col.g = (uint8_t)(c.g * cg);
           col.b = (uint8_t)(c.b * cb);
 
+          
+          float w = std::clamp((tex_w/0.5f) * fogW, 0.0f, 1.0f);
+
+          col = mixRGB(col.r, col.g, col.b, fogColor.r, fogColor.g, fogColor.b, w); 
+
           /*
           int ck = std::clamp(tex_w, 0.0f, 1.0f)*255;
           col.r = (uint8_t)(ck);
@@ -478,7 +512,8 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
     }
   }
 
-  stData.numOfTriangles++;
+  stData.numOfTrianglesPerFrame++;
+  stData.numOfTrianglesPerSecond++;
 }
 
 void Engine::drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color)
@@ -588,18 +623,20 @@ void Engine::fillTriangle(Vec3 &t1, Vec3 &t2, Vec3 &t3, Color color)
     }
   }
 
-  stData.numOfTriangles++;
+  stData.numOfTrianglesPerFrame++;
+  stData.numOfTrianglesPerSecond++;
 }
 
-void Engine::renderTriangle(Triangle &triangle)
+void Engine::renderTriangle(Triangle &triangle, int textureID)
 {
+
   switch (rMode)
   {
   case RenderMode::textured:
     texturedTriangle(triangle.p[0], triangle.t[0], triangle.t[0].w,
                      triangle.p[1], triangle.t[1], triangle.t[1].w,
                      triangle.p[2], triangle.t[2], triangle.t[2].w,
-                     textureImage, triangle.color);
+                     textureImage[textureID], triangle.color);
     break;
   case RenderMode::filled:
     fillTriangle(triangle.p[0], triangle.p[1], triangle.p[2], triangle.color);
@@ -697,11 +734,12 @@ void Engine::renderDebugData()
 
 void Engine::render(int debugMode)
 {
-  window.clear(sf::Color(0, 80, 128));
+  //window.clear(sf::Color(0, 80, 128));
+  window.clear(sf::Color(fogColor.r, fogColor.g, fogColor.b));
 
   renderDebugData();
 
-  bool dither = false;
+  bool dither = true;
   if (dither)
   {
     Dither_FloydSteinberg();
@@ -726,7 +764,7 @@ void Engine::render(int debugMode)
     stData.graphSize = 48;
     dt += deltaTime;
     fpsCounter++;
-    if (fpsCounter >= fpsCounterMax)
+    if (fpsCounter >= fpsCounterMax && dt >= 1.0f)
     {
       char titleText[32] = {0};
       float fps = 1.0 / (dt / (float)fpsCounter);
@@ -737,10 +775,11 @@ void Engine::render(int debugMode)
         stData.fps_graph.erase(stData.fps_graph.begin() + 0);
 
       printf("%s\n", titleText);
-      printf("Rendered triangles: %u\n", stData.numOfTriangles);
+      printf("Rendered triangles per second: %u\n", stData.numOfTrianglesPerSecond);
       window.setTitle(titleText);
 
       fpsCounter = dt = 0;
+      stData.numOfTrianglesPerSecond = 0;
     }
   }
 
@@ -759,7 +798,7 @@ void Engine::render(int debugMode)
   }
   */
 
-  stData.numOfTriangles = 0;
+  stData.numOfTrianglesPerFrame = 0;
 }
 
 void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
@@ -788,6 +827,7 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
         triTransformed.p[0] = Matrix_MultiplyVector(component.transform.matWorld, tri.p[0]);
         triTransformed.p[1] = Matrix_MultiplyVector(component.transform.matWorld, tri.p[1]);
         triTransformed.p[2] = Matrix_MultiplyVector(component.transform.matWorld, tri.p[2]);
+        tri.textureID = mesh.textureID;
         triTransformed.t[0] = tri.t[0];
         triTransformed.t[1] = tri.t[1];
         triTransformed.t[2] = tri.t[2];
@@ -817,6 +857,7 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
           triViewed.p[1] = Matrix_MultiplyVector(matView, triTransformed.p[1]);
           triViewed.p[2] = Matrix_MultiplyVector(matView, triTransformed.p[2]);
           triViewed.color = tri.color;
+          triViewed.textureID = tri.textureID;
           triViewed.t[0] = triTransformed.t[0];
           triViewed.t[1] = triTransformed.t[1];
           triViewed.t[2] = triTransformed.t[2];
@@ -837,6 +878,7 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
             triProjected.p[1] = Matrix_MultiplyVector(matProj, clipped[n].p[1]);
             triProjected.p[2] = Matrix_MultiplyVector(matProj, clipped[n].p[2]);
             triProjected.color = clipped[n].color;
+            triProjected.textureID = clipped[n].textureID;
             triProjected.t[0] = clipped[n].t[0];
             triProjected.t[1] = clipped[n].t[1];
             triProjected.t[2] = clipped[n].t[2];
@@ -860,6 +902,17 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
             triProjected.t[0].w = 1.0f / triProjected.p[0].w;
             triProjected.t[1].w = 1.0f / triProjected.p[1].w;
             triProjected.t[2].w = 1.0f / triProjected.p[2].w;
+
+            float w = 0;
+
+            for (int a = 0; a < 3; a++)
+            {
+              w += triProjected.t[a].w;
+            }
+            w /= 3;
+
+            if (w < clipEnd)
+              continue;
 
             // Scale into view, we moved the normalising into cartesian space
             // out of the matrix.vector function from the previous videos, so
@@ -896,7 +949,10 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
             uint8_t litG = clamp2((dp * triProjected.color.g), 0.0f, 255.0f);
             uint8_t litB = clamp2((dp * triProjected.color.b), 0.0f, 255.0f);
 
-            triProjected.color = {litR, litG, litB};
+            
+
+            triProjected.color = {litR, litG, litB};// mixRGB(litR, litG, litB, 128, 128, 255, 0.0); // {litR, litG, litB};
+
             vecTrianglesToRaster.push_back(triProjected);
           }
         }
@@ -970,7 +1026,7 @@ void Engine::rasterize()
     for (auto &t : listTriangles)
     {
       // rasterize
-      renderTriangle(t);
+      renderTriangle(t, t.textureID);
     }
   }
 }
