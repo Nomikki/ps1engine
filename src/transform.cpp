@@ -1,7 +1,8 @@
 #include "transform.hpp"
 
-Transform::Transform() {
-    calculateAngles(0, 0, 0);
+Transform::Transform()
+{
+  calculateAngles(0, 0, 0);
 }
 Transform::~Transform() {}
 

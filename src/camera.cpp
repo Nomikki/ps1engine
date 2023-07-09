@@ -14,8 +14,6 @@ void Camera::Update(float dt)
   vForward = Vector_Mul(lookDir, dt);
   vRight = Vector_Mul(lookDirRight, dt);
 
-  
-
   vTarget = {0, 0, 1};
 
   mat4x4 matCameraRot = Matrix_MakeRotationY(yaw);
@@ -25,5 +23,4 @@ void Camera::Update(float dt)
   lookDirRight = Matrix_MultiplyVector(matCameraRotRight, vTarget);
 
   vTarget = Vector_Add(pos, lookDir);
-
 }

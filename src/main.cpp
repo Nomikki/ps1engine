@@ -1,8 +1,9 @@
+
 #include <engine.hpp>
 
 void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float cameraTurning)
 {
-  
+
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     camera->pos = Vector_Add(camera->pos, camera->vRight);
 
@@ -26,6 +27,8 @@ void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float camer
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
     camera->yaw -= cameraTurning * engine->getClock();
+
+  
 }
 
 int main()
@@ -36,14 +39,10 @@ int main()
   engine->LoadTexture("Spyro/Glimmer_ObjectTextures.png");
   engine->LoadTexture("Low.png");
 
-
-
   Camera *camera = new Camera();
 
-  
-      
-  engine->components.createFromFile("spyro/spyro.obj", 0, Vec3{0, 0, 0});
-  engine->components.createFromFile("Artisans Hub.obj", 1, Vec3{0, 0, 0});
+  engine->components.createFromFile("spyro/spyro.obj", 0);
+  engine->components.createFromFile("Artisans Hub.obj", 1);
 
   const float cameraSpeed = 5;
   const float cameraTurning = 1.0;
@@ -53,15 +52,13 @@ int main()
     engine->checkEvents();
 
     handleInputs(engine, camera, cameraSpeed, cameraTurning);
-    
 
     camera->Update(cameraSpeed * engine->getClock());
     camera->vTarget.y = camera->pos.y + 0.3;
+
     engine->calculateTriangles(camera->pos, camera->vTarget, camera->vUp);
     engine->renderAll();
   }
-  
-
 
   delete engine;
 }

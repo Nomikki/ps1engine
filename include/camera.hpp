@@ -24,9 +24,6 @@ public:
 
   void Update(float dt);
 
-  
-  
-
 private:
 };
 

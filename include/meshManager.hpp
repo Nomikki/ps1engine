@@ -4,7 +4,8 @@
 #include <vector>
 #include "mesh.hpp"
 
-struct Meshes {
+struct Meshes
+{
   std::vector<Mesh> meshes;
 };
 

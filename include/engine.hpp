@@ -1,3 +1,6 @@
+#ifndef __ENGINE_H__
+#define __ENGINE_H__
+
 /*
   todo:
     - meta data for textures (w, h, data, dithered, size etc)
@@ -110,3 +113,5 @@ private:
 
   float *pDepthBuffer = nullptr;
 };
+
+#endif // __ENGINE_H__
