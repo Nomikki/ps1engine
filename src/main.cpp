@@ -2,6 +2,7 @@
 
 void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float cameraTurning)
 {
+  
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
     camera->pos = Vector_Add(camera->pos, camera->vRight);
 
@@ -30,10 +31,10 @@ void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float camer
 int main()
 {
   // init
-  Engine *engine = new Engine(25, 4, "PS1 clone");
-  engine->setSort(false);
+  Engine *engine = new Engine(30, 4, "PS1 clone");
+  engine->setSort(true);
   engine->LoadTexture("Spyro/Glimmer_ObjectTextures.png");
-  engine->LoadTexture("High.png");
+  engine->LoadTexture("Low.png");
 
 
 
@@ -53,8 +54,10 @@ int main()
     engine->checkEvents();
 
     handleInputs(engine, camera, cameraSpeed, cameraTurning);
+    
 
     camera->Update(cameraSpeed * engine->getClock());
+    camera->vTarget.y = camera->pos.y + 0.3;
     engine->calculateTriangles(camera->pos, camera->vTarget, camera->vUp);
     engine->renderAll();
   }

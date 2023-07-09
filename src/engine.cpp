@@ -5,21 +5,21 @@ Engine::Engine(int targetFPS, float scale, const char *title)
   width = 256;
   height = 224;
 
-  fogColor = {128,160, 192};
-  fogW = 10;
-  clipEnd = 0.01f;
+  fogColor = {128, 160, 192};
+  fogW = 20;
+  clipEnd = 0.0f;
 
   fpsCounter = 0;
   fpsCounterMax = 10;
   fpsLimit = targetFPS;
   this->scale = scale;
+  setDither(false);
+  setSort(false);
 
   window.create(sf::VideoMode(width * scale, height * scale), title, sf::Style::Default);
-
   window.setFramerateLimit(fpsLimit);
 
   screenBuffer.create(width, height, sf::Color::Black);
-  // screenBuffer2.create(width, height, sf::Color::Black);
 
   for (int y = 0; y < height; y++)
   {
@@ -42,7 +42,6 @@ Engine::Engine(int targetFPS, float scale, const char *title)
   dt = getClock();
 
   px0 = const_cast<sf::Uint8 *>(screenBuffer.getPixelsPtr());
-  // px1 = const_cast<sf::Uint8 *>(screenBuffer2.getPixelsPtr());
 
   clearScreenPtr = new uint8_t[width * height * 3];
 
@@ -167,7 +166,7 @@ void Engine::Dither_FloydSteinberg()
   int32_t w = width;
   int32_t h = height;
 
-  memcpy(videoBufferBack, videoBuffer, w*h*3);
+  memcpy(videoBufferBack, videoBuffer, w * h * 3);
 
   constexpr float step = 16.0;
   constexpr float step1 = 7.0f / step;
@@ -185,9 +184,9 @@ void Engine::Dither_FloydSteinberg()
   Color p;
   int px, py;
 
-  for (int y = 1; y < h-1; y++)
+  for (int y = 1; y < h - 1; y++)
   {
-    for (int x = 1; x < w-1; x++)
+    for (int x = 1; x < w - 1; x++)
     {
 
       pixel = getPixelFrom(x, y, videoBufferBack); // pDest->getPixel(x, y);
@@ -261,8 +260,6 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
                               sf::Image &img, Color &color)
 {
 
-  
-  
   int x1 = t1.x;
   int x2 = t2.x;
   int x3 = t3.x;
@@ -386,7 +383,7 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
 
         tex_v = 1.0f - tex_v; // flip it!
 
-        if (tex_w > pDepthBuffer[i * width + j])
+        if (tex_w > pDepthBuffer[i * width + j] || useSort == true)
         {
           Color col;
           sf::Color c = img.getPixel((int)(tex_u * tex_ww), (int)(tex_v * tex_hh));
@@ -399,11 +396,9 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
           col.g = (uint8_t)(c.g * cg);
           col.b = (uint8_t)(c.b * cb);
 
+          float w = std::clamp((tex_w / 0.5f) * fogW, 0.0f, 1.0f);
 
-          float w = std::clamp((tex_w/0.5f) * fogW, 0.0f, 1.0f);
-          
-          col = mixRGB(col.r, col.g, col.b, fogColor.r, fogColor.g, fogColor.b, w); 
-
+          col = mixRGB(col.r, col.g, col.b, fogColor.r, fogColor.g, fogColor.b, w);
 
           /*
           int ck = std::clamp(tex_w, 0.0f, 1.0f)*255;
@@ -412,7 +407,9 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
           col.b = (uint8_t)(ck);
           */
           setPixel(j, i, col);
-          pDepthBuffer[i * width + j] = tex_w;
+
+          if (!useSort)
+            pDepthBuffer[i * width + j] = tex_w;
         }
 
         t += tstep;
@@ -477,7 +474,7 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
 
         tex_w = (1.0f - t) * tex_sw + t * tex_ew;
 
-        if (tex_w > pDepthBuffer[i * width + j])
+        if (tex_w > pDepthBuffer[i * width + j] || useSort == true)
         {
 
           Color col;
@@ -491,10 +488,9 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
           col.g = (uint8_t)(c.g * cg);
           col.b = (uint8_t)(c.b * cb);
 
-          
-          float w = std::clamp((tex_w/0.5f) * fogW, 0.0f, 1.0f);
+          float w = std::clamp((tex_w / 0.5f) * fogW, 0.0f, 1.0f);
 
-          col = mixRGB(col.r, col.g, col.b, fogColor.r, fogColor.g, fogColor.b, w); 
+          col = mixRGB(col.r, col.g, col.b, fogColor.r, fogColor.g, fogColor.b, w);
 
           /*
           int ck = std::clamp(tex_w, 0.0f, 1.0f)*255;
@@ -504,7 +500,9 @@ void Engine::texturedTriangle(Vec3 &t1, UV &uv1, float w1,
           */
 
           setPixel(j, i, col);
-          pDepthBuffer[i * width + j] = tex_w;
+
+          if (!useSort)
+            pDepthBuffer[i * width + j] = tex_w;
         }
 
         t += tstep;
@@ -734,13 +732,12 @@ void Engine::renderDebugData()
 
 void Engine::render(int debugMode)
 {
-  //window.clear(sf::Color(0, 80, 128));
+  // window.clear(sf::Color(0, 80, 128));
   window.clear(sf::Color(fogColor.r, fogColor.g, fogColor.b));
 
   renderDebugData();
 
-  bool dither = true;
-  if (dither)
+  if (useDither)
   {
     Dither_FloydSteinberg();
     copyVideoBuffer(videoBufferBack);
@@ -949,9 +946,7 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
             uint8_t litG = clamp2((dp * triProjected.color.g), 0.0f, 255.0f);
             uint8_t litB = clamp2((dp * triProjected.color.b), 0.0f, 255.0f);
 
-            
-
-            triProjected.color = {litR, litG, litB};// mixRGB(litR, litG, litB, 128, 128, 255, 0.0); // {litR, litG, litB};
+            triProjected.color = {litR, litG, litB}; // mixRGB(litR, litG, litB, 128, 128, 255, 0.0); // {litR, litG, litB};
 
             vecTrianglesToRaster.push_back(triProjected);
           }
@@ -1040,4 +1035,9 @@ void Engine::renderAll()
 void Engine::setSort(bool b)
 {
   useSort = b;
+}
+
+void Engine::setDither(bool v)
+{
+  useDither = v;
 }

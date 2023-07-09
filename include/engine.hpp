@@ -58,6 +58,8 @@ public:
   void renderAll();
   void calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp);
   void setSort(bool b);
+  void setDither(bool v);
+
   float getClock();
 
   // Mesh meshCube;
@@ -95,6 +97,7 @@ private:
 
   float scale;
 
+  bool useDither;
   bool useSort;
   Color fogColor;
   float fogW;
@@ -114,6 +117,4 @@ private:
   sf::Uint8 *clearScreenPtr;
 
   float *pDepthBuffer = nullptr;
-
-
 };

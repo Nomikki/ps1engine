@@ -395,6 +395,5 @@ Color mixRGB(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t
   c.r = (r1 * v) + (r2 * (1 - v));
   c.g = (g1 * v) + (g2 * (1 - v));
   c.b = (b1 * v) + (b2 * (1 - v));
-
   return c;
 }
