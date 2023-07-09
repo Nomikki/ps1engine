@@ -27,21 +27,21 @@ void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float camer
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
     camera->yaw -= cameraTurning * engine->getClock();
-
-  
 }
 
 int main()
 {
   // init
   Engine *engine = new Engine(30, 4, "PS1 clone");
-  engine->setSort(true);
+  engine->setSort(false);
   engine->LoadTexture("Spyro/Glimmer_ObjectTextures.png");
   engine->LoadTexture("Low.png");
 
   Camera *camera = new Camera();
 
-  engine->components.createFromFile("spyro/spyro.obj", 0);
+  for (int x = 0; x < 10; x++)
+    engine->components.createFromFile("spyro/spyro.obj", 0, Vec3{x * 2.0f, 0, 0});
+
   engine->components.createFromFile("Artisans Hub.obj", 1);
 
   const float cameraSpeed = 5;

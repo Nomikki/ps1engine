@@ -57,6 +57,8 @@ public:
   void setSort(bool b);
   void setDither(bool v);
 
+  bool checkIfAABBisOnScreen(AABB &aabb, mat4x4 &matWorld, mat4x4 &matView);
+
   float getClock();
 
   Components components;

@@ -12,6 +12,9 @@ bool Mesh::LoadObjFromFile(std::string filename)
   // local cache of uv vectors
   std::vector<UV> uvs;
 
+  aabb.min = {10000, 10000, 10000};
+  aabb.max = {-10000, -10000, -10000};
+
   while (!f.eof())
   {
     char line[128];
@@ -27,6 +30,21 @@ bool Mesh::LoadObjFromFile(std::string filename)
     {
       Vec3 v;
       s >> junk >> v.x >> v.y >> v.z;
+
+      if (v.x < aabb.min.x)
+        aabb.min.x = v.x;
+      if (v.y < aabb.min.y)
+        aabb.min.y = v.y;
+      if (v.z < aabb.min.z)
+        aabb.min.z = v.z;
+
+      if (v.x > aabb.max.x)
+        aabb.max.x = v.x;
+      if (v.y > aabb.max.y)
+        aabb.max.y = v.y;
+      if (v.z > aabb.max.z)
+        aabb.max.z = v.z;
+
       verts.push_back(v);
     }
 
@@ -70,6 +88,12 @@ bool Mesh::LoadObjFromFile(std::string filename)
       // printf("f");
     }
   }
-  // printf("obj file loaded!\n");
+
+  printf("aabb: ");
+  printVector(aabb.min);
+  printf(" --- ");
+  printVector(aabb.max);
+  printf("\n");
+
   return true;
 }

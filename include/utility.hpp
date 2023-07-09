@@ -49,6 +49,12 @@ struct Triangle
   int textureID;
 };
 
+struct AABB
+{
+  Vec3 min;
+  Vec3 max;
+};
+
 struct mat4x4
 {
   float m[4][4] = {0};

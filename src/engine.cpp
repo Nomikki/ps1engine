@@ -798,6 +798,146 @@ void Engine::render(int debugMode)
   stData.numOfTrianglesPerFrame = 0;
 }
 
+bool Engine::checkIfAABBisOnScreen(AABB &aabb, mat4x4 &matWorld, mat4x4 &matView)
+{
+  //rMode = wireframe;
+
+  Triangle triProjected, triTransformed, triViewed;
+
+  int nClippedTriangles = 0;
+  Triangle clipped[2];
+  Vec3 av = {0, 0, 1};
+  Vec3 bc = {0, 0, 1};
+
+  std::vector<Vec3> verts;
+  verts.push_back({aabb.min.x, aabb.min.y, aabb.min.z});
+  verts.push_back({aabb.max.x, aabb.min.y, aabb.min.z});
+  verts.push_back({aabb.min.x, aabb.min.y, aabb.max.z});
+  verts.push_back({aabb.max.x, aabb.min.y, aabb.max.z});
+  
+  verts.push_back({aabb.min.x, aabb.max.y, aabb.min.z});
+  verts.push_back({aabb.max.x, aabb.max.y, aabb.min.z});
+  verts.push_back({aabb.min.x, aabb.max.y, aabb.max.z});
+  verts.push_back({aabb.max.x, aabb.max.y, aabb.max.z});
+
+
+  int k = 0;
+
+  for (int a = 0; a < 8; a++)
+  {
+
+    if (a == 0)
+    {
+      triViewed.p[0] = verts[0];
+      triViewed.p[1] = verts[1];
+      triViewed.p[2] = verts[2];
+    }
+    else if (a == 1)
+    {
+      triViewed.p[0] = verts[1];
+      triViewed.p[1] = verts[2];
+      triViewed.p[2] = verts[3];
+    }
+    else if (a == 2)
+    {
+      triViewed.p[0] = verts[1];
+      triViewed.p[1] = verts[0];
+      triViewed.p[2] = verts[5];
+    }
+    else if (a == 3)
+    {
+      triViewed.p[0] = verts[0];
+      triViewed.p[1] = verts[5];
+      triViewed.p[2] = verts[4];
+    }
+    else if (a == 4)
+    {
+      triViewed.p[0] = verts[2];
+      triViewed.p[1] = verts[7];
+      triViewed.p[2] = verts[6];
+    }
+    else if (a == 5)
+    {
+      triViewed.p[0] = verts[3];
+      triViewed.p[1] = verts[7];
+      triViewed.p[2] = verts[2];
+    }
+    else if (a == 6)
+    {
+      triViewed.p[0] = verts[5];
+      triViewed.p[1] = verts[7];
+      triViewed.p[2] = verts[6];
+    }
+    else if (a == 7)
+    {
+      triViewed.p[0] = verts[4];
+      triViewed.p[1] = verts[5];
+      triViewed.p[2] = verts[6];
+    }
+
+    triTransformed.p[0] = Matrix_MultiplyVector(matWorld, triViewed.p[0]);
+    triTransformed.p[1] = Matrix_MultiplyVector(matWorld, triViewed.p[1]);
+    triTransformed.p[2] = Matrix_MultiplyVector(matWorld, triViewed.p[2]);
+
+    triViewed.p[0] = Matrix_MultiplyVector(matView, triTransformed.p[0]);
+    triViewed.p[1] = Matrix_MultiplyVector(matView, triTransformed.p[1]);
+    triViewed.p[2] = Matrix_MultiplyVector(matView, triTransformed.p[2]);
+
+    nClippedTriangles = Triangle_CLipAgainstPlane(av, bc, triViewed, clipped[0], clipped[1]);
+
+    if (nClippedTriangles == 0)
+      continue;
+    
+    k++;
+
+    /*
+    for (int n = 0; n < nClippedTriangles; n++)
+    {
+
+      triProjected.p[0] = Matrix_MultiplyVector(matProj, clipped[n].p[0]);
+      triProjected.p[1] = Matrix_MultiplyVector(matProj, clipped[n].p[1]);
+      triProjected.p[2] = Matrix_MultiplyVector(matProj, clipped[n].p[2]);
+
+      triProjected.t[0] = clipped[n].t[0];
+      triProjected.t[1] = clipped[n].t[1];
+      triProjected.t[2] = clipped[n].t[2];
+
+      triProjected.t[0].w = 1.0f / triProjected.p[0].w;
+      triProjected.t[1].w = 1.0f / triProjected.p[1].w;
+      triProjected.t[2].w = 1.0f / triProjected.p[2].w;
+
+      // Scale into view, we moved the normalising into cartesian space
+      // out of the matrix.vector function from the previous videos, so
+      // do this manually
+      triProjected.p[0] = Vector_Div(triProjected.p[0], triProjected.p[0].w);
+      triProjected.p[1] = Vector_Div(triProjected.p[1], triProjected.p[1].w);
+      triProjected.p[2] = Vector_Div(triProjected.p[2], triProjected.p[2].w);
+
+      // offset verts into visible normalised space
+      Vec3 vOffsetView = {1, 1, 0};
+      triProjected.p[0] = Vector_Add(triProjected.p[0], vOffsetView);
+      triProjected.p[1] = Vector_Add(triProjected.p[1], vOffsetView);
+      triProjected.p[2] = Vector_Add(triProjected.p[2], vOffsetView);
+
+      for (int i = 0; i < 3; i++)
+      {
+        triProjected.p[i].x *= 0.5f * (float)width;
+        triProjected.p[i].y *= 0.5f * (float)height;
+      }
+
+      vecTrianglesToRaster.push_back(triProjected);
+    }
+    */
+    
+  }
+
+  
+
+  if (k > 0)
+    return true;
+
+  return false;
+}
 void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
 {
   vecTrianglesToRaster.clear();
@@ -805,6 +945,8 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
   mat4x4 matCamera = Matrix_PointAt(camera, vTarget, vUp);
   mat4x4 matView = Matrix_QuickInverse(matCamera);
   mat4x4 matTrans;
+
+  int numOfRenderedComponents = 0;
 
   for (int i = 0; i < components.components.size(); i++)
   {
@@ -816,6 +958,12 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
 
     for (auto mesh : component.meshes.meshes)
     {
+
+      bool r = checkIfAABBisOnScreen(mesh.aabb, component.transform.matWorld, matView);
+      if (r == false)
+        continue;
+
+      numOfRenderedComponents++;
 
       for (auto tri : mesh.tris)
       {
@@ -954,6 +1102,8 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
       }
     }
   }
+
+  //printf("num of: %i\n", numOfRenderedComponents);
 
   if (useSort)
   {
