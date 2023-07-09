@@ -40,10 +40,9 @@ int main()
 
   Camera *camera = new Camera();
 
-  for (int k = 0; k < 1; k++)
-    for (int j = 0; j < 2; j++)
-      engine->components.createFromFile("spyro/spyro.obj", 0, Vec3{-10.0f + (k * 2), 0, 5.0f + (j * 4)});
-
+  
+      
+  engine->components.createFromFile("spyro/spyro.obj", 0, Vec3{0, 0, 0});
   engine->components.createFromFile("Artisans Hub.obj", 1, Vec3{0, 0, 0});
 
   const float cameraSpeed = 5;

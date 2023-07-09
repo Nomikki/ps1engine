@@ -1,6 +1,14 @@
 #ifndef __UTILITY_H__
 #define __UTILITY_H__
 
+/*
+  todo:
+  - precalculate sin/cos
+  - use fixed point numbers
+  - triangle store normals too
+
+*/
+
 #include <cmath>
 #include <fstream>
 #include <strstream>

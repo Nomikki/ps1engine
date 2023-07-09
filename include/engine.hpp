@@ -2,17 +2,12 @@
   todo:
     - meta data for textures (w, h, data, dithered, size etc)
     - 2d arrays for pixels, update render only once per frame
-    - refactoring whole code base
     - point lights
     - gouraud shading
     - when loading image data, quantise it before rendering
       -> when rendering, apply only dither, not quantise
-
     - check AABB boxes
     - shared resources
-    - z buffer
-
-
 */
 #include <SFML/Graphics.hpp>
 #include <cstdio>
@@ -22,7 +17,6 @@
 
 #include <algorithm>
 #include "utility.hpp"
-// #include "meshManager.hpp"
 #include "componentManager.hpp"
 #include "camera.hpp"
 
@@ -62,8 +56,6 @@ public:
 
   float getClock();
 
-  // Mesh meshCube;
-  // Meshes meshes;
   Components components;
 
   mat4x4 matProj;
