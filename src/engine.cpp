@@ -1,4 +1,4 @@
-#include <engine.hpp>
+#include "engine.hpp"
 
 Engine::Engine(int targetFPS, float scale, const char *title)
 {
@@ -15,6 +15,7 @@ Engine::Engine(int targetFPS, float scale, const char *title)
   this->scale = scale;
   setDither(false);
   setSort(false);
+  generate_sincos_lookupTables();
 
   window.create(sf::VideoMode(width * scale, height * scale), title, sf::Style::Default);
   window.setFramerateLimit(fpsLimit);
@@ -72,6 +73,9 @@ Engine::Engine(int targetFPS, float scale, const char *title)
 
   matProj = Matrix_MakeProjection(fFov, fAspectRatio, fNear, fFar);
   rMode = RenderMode::textured;
+
+  zero = _mm_setzero_ps(); // SSE-zero-lohko
+  depthBufferSize = width * height;
 }
 
 int Engine::LoadTexture(std::string filename)
@@ -123,21 +127,49 @@ Engine::~Engine()
   pDepthBuffer = nullptr;
 }
 
+void Engine::ClearDepthBufferWithSIMD(float *pDepthBuffer, size_t size)
+{
+  // Tarkista, että koko on jaollinen 4:llä, koska SSE-instruktiot käsittelevät 128-bittisiä lohkoja
+  if (size % 4 != 0)
+  {
+    // Voit käyttää perinteistä silmukkaa jäljellä oleville arvoille
+    for (size_t i = size - (size % 4); i < size; ++i)
+    {
+      pDepthBuffer[i] = 0.0f;
+    }
+  }
+
+  // Nollaa syvyyspuskuri SIMD-instruktiolla
+  for (size_t i = 0; i < size / 4; ++i)
+  {
+    _mm_store_ps(&pDepthBuffer[i * 4], zero);
+    //_mm_storeu_ps(&pDepthBuffer[i * 4], zero);
+  }
+}
+
 void Engine::clear()
 {
+
+  /*
   memcpy(videoBuffer, clearScreenPtr, width * height * 3);
   memcpy(videoBufferBack, clearScreenPtr, width * height * 3);
+  */
+ 
 
   for (int i = 0; i < width * height; i++)
   {
     pDepthBuffer[i] = 0;
   }
+  
+
+  //ClearDepthBufferWithSIMD(pDepthBuffer, depthBufferSize);
 }
 
 inline void Engine::setPixel(int x, int y, Color &color)
 {
 
   uint32_t offset = (y * width + x) * 3;
+
   videoBuffer[offset] = color.r;
   videoBuffer[offset + 1] = color.g;
   videoBuffer[offset + 2] = color.b;
@@ -671,13 +703,15 @@ void Engine::checkEvents()
 
 void Engine::copyVideoBuffer(uint8_t *buffer)
 {
+  Color c;
+  uint32_t offset;
+
   for (int y = 0; y < height; y++)
   {
     for (int x = 0; x < width; x++)
     {
-      uint32_t offset = (y * width + x) * 3;
+      offset = (y * width + x) * 3;
 
-      Color c;
       c.r = buffer[offset];
       c.g = buffer[offset + 1];
       c.b = buffer[offset + 2];
@@ -733,7 +767,7 @@ void Engine::renderDebugData()
 void Engine::render(int debugMode)
 {
   // window.clear(sf::Color(0, 80, 128));
-  window.clear(sf::Color(fogColor.r, fogColor.g, fogColor.b));
+  // window.clear(sf::Color(fogColor.r, fogColor.g, fogColor.b));
 
   renderDebugData();
 
@@ -747,10 +781,12 @@ void Engine::render(int debugMode)
     copyVideoBuffer(videoBuffer);
   }
 
-  screenTexture.update(screenBuffer);
-  window.draw(sprite);
-  sprite.setPosition(0, 0);
-  window.display();
+  
+    screenTexture.update(screenBuffer);
+    window.draw(sprite);
+    sprite.setPosition(0, 0);
+    window.display();
+    
 
   clear();
 
@@ -800,7 +836,7 @@ void Engine::render(int debugMode)
 
 bool Engine::checkIfAABBisOnScreen(AABB &aabb, mat4x4 &matWorld, mat4x4 &matView)
 {
-  //rMode = wireframe;
+  // rMode = wireframe;
 
   Triangle triProjected, triTransformed, triViewed;
 
@@ -814,12 +850,11 @@ bool Engine::checkIfAABBisOnScreen(AABB &aabb, mat4x4 &matWorld, mat4x4 &matView
   verts.push_back({aabb.max.x, aabb.min.y, aabb.min.z});
   verts.push_back({aabb.min.x, aabb.min.y, aabb.max.z});
   verts.push_back({aabb.max.x, aabb.min.y, aabb.max.z});
-  
+
   verts.push_back({aabb.min.x, aabb.max.y, aabb.min.z});
   verts.push_back({aabb.max.x, aabb.max.y, aabb.min.z});
   verts.push_back({aabb.min.x, aabb.max.y, aabb.max.z});
   verts.push_back({aabb.max.x, aabb.max.y, aabb.max.z});
-
 
   int k = 0;
 
@@ -887,7 +922,7 @@ bool Engine::checkIfAABBisOnScreen(AABB &aabb, mat4x4 &matWorld, mat4x4 &matView
 
     if (nClippedTriangles == 0)
       continue;
-    
+
     k++;
 
     /*
@@ -928,10 +963,7 @@ bool Engine::checkIfAABBisOnScreen(AABB &aabb, mat4x4 &matWorld, mat4x4 &matView
       vecTrianglesToRaster.push_back(triProjected);
     }
     */
-    
   }
-
-  
 
   if (k > 0)
     return true;
@@ -1103,7 +1135,7 @@ void Engine::calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp)
     }
   }
 
-  //printf("num of: %i\n", numOfRenderedComponents);
+  // printf("num of: %i\n", numOfRenderedComponents);
 
   if (useSort)
   {

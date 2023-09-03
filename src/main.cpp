@@ -1,38 +1,65 @@
 
 #include <engine.hpp>
 
+bool needUpdate = true;
+
 void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float cameraTurning)
 {
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+  {
     camera->pos = Vector_Add(camera->pos, camera->vRight);
+    needUpdate = true;
+  }
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+  {
     camera->pos = Vector_Sub(camera->pos, camera->vRight);
+    needUpdate = true;
+  }
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+  {
     camera->pos.y -= cameraSpeed * engine->getClock();
+    needUpdate = true;
+  }
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::F))
+  {
     camera->pos.y += cameraSpeed * engine->getClock();
+    needUpdate = true;
+  }
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+  {
     camera->pos = Vector_Add(camera->pos, camera->vForward);
+    needUpdate = true;
+  }
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+  {
     camera->pos = Vector_Sub(camera->pos, camera->vForward);
+    needUpdate = true;
+  }
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+  {
     camera->yaw += cameraTurning * engine->getClock();
+    needUpdate = true;
+  }
 
   if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+  {
     camera->yaw -= cameraTurning * engine->getClock();
+    needUpdate = true;
+  }
 }
 
 int main()
 {
   // init
-  Engine *engine = new Engine(30, 4, "PS1 clone");
+  
+  Engine *engine = new Engine(0, 4, "PS1 clone");
   engine->setSort(false);
   engine->LoadTexture("Spyro/Glimmer_ObjectTextures.png");
   engine->LoadTexture("Low.png");
@@ -52,12 +79,15 @@ int main()
     engine->checkEvents();
 
     handleInputs(engine, camera, cameraSpeed, cameraTurning);
-
-    camera->Update(cameraSpeed * engine->getClock());
-    camera->vTarget.y = camera->pos.y + 0.3;
+    if (needUpdate)
+    {
+      camera->Update(cameraSpeed * engine->getClock());
+      camera->vTarget.y = camera->pos.y + 0.3;
+    }
 
     engine->calculateTriangles(camera->pos, camera->vTarget, camera->vUp);
     engine->renderAll();
+    needUpdate = false;
   }
 
   delete engine;

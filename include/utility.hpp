@@ -13,13 +13,14 @@
 #include <fstream>
 #include <strstream>
 #include <vector>
+#include <emmintrin.h>
 
 struct Color
 {
   uint8_t r;
   uint8_t g;
   uint8_t b;
-};
+} __attribute__((packed));
 
 struct Vec2
 {
@@ -84,7 +85,22 @@ mat4x4 Matrix_MakeTranslation(Vec3 pos);
 mat4x4 Matrix_MakeProjection(float fDovDegrees, float fAspectRatio, float fNear, float fFar);
 mat4x4 Matrix_PointAt(Vec3 &pos, Vec3 &target, Vec3 &up);
 mat4x4 Matrix_QuickInverse(mat4x4 &m);
-mat4x4 Matrix_MultiplyMatrix(mat4x4 &m1, mat4x4 &m2);
+
+// inline mat4x4 Matrix_MultiplyMatrix(mat4x4 &m1, mat4x4 &m2);
+inline mat4x4 Matrix_MultiplyMatrix(mat4x4 &m1, mat4x4 &m2)
+{
+  mat4x4 matrix;
+
+  for (int r = 0; r < 4; r++)
+    for (int c = 0; c < 4; c++)
+      matrix.m[r][c] = m1.m[r][0] * m2.m[0][c] +
+                       m1.m[r][1] * m2.m[1][c] +
+                       m1.m[r][2] * m2.m[2][c] +
+                       m1.m[r][3] * m2.m[3][c];
+
+  return matrix;
+}
+
 Vec3 Matrix_MultiplyVector(mat4x4 &m, Vec3 &i);
 Vec3 Vector_IntersectPlane(Vec3 &plane_p, Vec3 &plane_n, Vec3 &lineStart, Vec3 &lineEnd, float &t);
 
@@ -98,6 +114,8 @@ float Vector_DotProduct(Vec3 &v1, Vec3 &v2);
 float Vector_Length(Vec3 &v);
 Vec3 Vector_Normalise(Vec3 &v);
 Vec3 Vector_CrossProduct(Vec3 &v1, Vec3 &v2);
+
+void generate_sincos_lookupTables();
 
 template <typename t>
 t clamp2(t x, t min, t max)

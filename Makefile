@@ -1,4 +1,4 @@
-FLAGS := -Iinclude  -Llib -Os -s -O2 -std=c++17
+FLAGS := -Iinclude  -Llib -Os -s -O3 -O3 -march=native -ffast-math -funroll-loops -std=c++17 -msse
 LDLINKS := -lsfml-graphics -lsfml-window -lsfml-system
 
 all:

@@ -12,13 +12,17 @@
     - check AABB boxes
     - shared resources
 */
-#include <SFML/Graphics.hpp>
+
 #include <cstdio>
+#include <cstring>
 #include <vector>
 #include <list>
 #include <cmath>
-
 #include <algorithm>
+
+
+#include <SFML/Graphics.hpp>
+
 #include "utility.hpp"
 #include "componentManager.hpp"
 #include "camera.hpp"
@@ -49,6 +53,7 @@ public:
   void checkEvents();
   void render(int debugMode);
   void copyVideoBuffer(uint8_t *buffer);
+  void ClearDepthBufferWithSIMD(float* pDepthBuffer, size_t size);
   void clear();
   void Dither_FloydSteinberg();
   void rasterize();
@@ -99,6 +104,9 @@ private:
   Color fogColor;
   float fogW;
   float clipEnd;
+
+  __m128 zero;
+  size_t depthBufferSize;
 
   uint8_t *videoBuffer;
   uint8_t *videoBufferBack;

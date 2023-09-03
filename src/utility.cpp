@@ -1,7 +1,20 @@
 #include "utility.hpp"
 
+float sintable[360];
+float costable[360];
+
+void generate_sincos_lookupTables()
+{
+  for (int i = 0; i < 360; i++)
+  {
+    sintable[i] = sin(i / 180.0 * 3.1415f);
+    costable[i] = cos(i / 180.0 * 3.1415f);
+  }
+}
+
 Vec3 Matrix_MultiplyVector(mat4x4 &m, Vec3 &i)
 {
+
   Vec3 v;
   v.x = i.x * m.m[0][0] + i.y * m.m[1][0] + i.z * m.m[2][0] + i.w * m.m[3][0];
   v.y = i.x * m.m[0][1] + i.y * m.m[1][1] + i.z * m.m[2][1] + i.w * m.m[3][1];
@@ -24,32 +37,57 @@ mat4x4 Matrix_MakeIdentity()
 mat4x4 Matrix_MakeRotationX(float fAngleRad)
 {
   mat4x4 matrix;
+  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Muunna radiaanit asteiksi
+  a = (a % 360 + 360) % 360;
+
+  float cosff = costable[a];
+  float sinff = sintable[a];
+
+  // float cosff = cosf(fAngleRad);
+  // float sinff = sinf(fAngleRad);
+
   matrix.m[0][0] = 1;
-  matrix.m[1][1] = cosf(fAngleRad);
-  matrix.m[1][2] = sinf(fAngleRad);
-  matrix.m[2][1] = -sinf(fAngleRad);
-  matrix.m[2][2] = cosf(fAngleRad);
+  matrix.m[1][1] = cosff;  // cosf(fAngleRad);
+  matrix.m[1][2] = sinff;  // sinf(fAngleRad);
+  matrix.m[2][1] = -sinff; //-sinf(fAngleRad);
+  matrix.m[2][2] = cosff;  // cosf(fAngleRad);
   matrix.m[3][3] = 1;
   return matrix;
 }
 mat4x4 Matrix_MakeRotationY(float fAngleRad)
 {
+  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Muunna radiaanit asteiksi
+  a = (a % 360 + 360) % 360;
+
+  float cosff = costable[a];
+  float sinff = sintable[a];
+
+  // float cosff = cosf(fAngleRad);
+
   mat4x4 matrix;
-  matrix.m[0][0] = cosf(fAngleRad);
-  matrix.m[0][2] = sinf(fAngleRad);
-  matrix.m[2][0] = -sinf(fAngleRad);
+  matrix.m[0][0] = cosff;  // cosf(fAngleRad);
+  matrix.m[0][2] = sinff;  // sinf(fAngleRad);
+  matrix.m[2][0] = -sinff; // -sinf(fAngleRad);
   matrix.m[1][1] = 1;
-  matrix.m[2][2] = cosf(fAngleRad);
+  matrix.m[2][2] = cosff; // cosf(fAngleRad);
   matrix.m[3][3] = 1;
   return matrix;
 }
 mat4x4 Matrix_MakeRotationZ(float fAngleRad)
 {
+  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Muunna radiaanit asteiksi
+  a = (a % 360 + 360) % 360;
+
+  float cosff = costable[a];
+  float sinff = sintable[a];
+
+  // float cosff = cosf(fAngleRad);
+
   mat4x4 matrix;
-  matrix.m[0][0] = cosf(fAngleRad);
-  matrix.m[0][1] = sinf(fAngleRad);
-  matrix.m[1][0] = -sinf(fAngleRad);
-  matrix.m[1][1] = cosf(fAngleRad);
+  matrix.m[0][0] = cosff;  // cosf(fAngleRad);
+  matrix.m[0][1] = sinff;  // sinf(fAngleRad);
+  matrix.m[1][0] = -sinff; //-sinf(fAngleRad);
+  matrix.m[1][1] = cosff;  // cosf(fAngleRad);
   matrix.m[2][2] = 1;
   matrix.m[3][3] = 1;
   return matrix;
@@ -83,18 +121,6 @@ mat4x4 Matrix_MakeProjection(float fDovDegrees, float fAspectRatio, float fNear,
   matrix.m[3][2] = (-fFar * fNear) / (fFar - fNear);
   matrix.m[2][3] = 1;
   matrix.m[3][3] = 0;
-  return matrix;
-}
-
-mat4x4 Matrix_MultiplyMatrix(mat4x4 &m1, mat4x4 &m2)
-{
-  mat4x4 matrix;
-  for (int c = 0; c < 4; c++)
-    for (int r = 0; r < 4; r++)
-      matrix.m[r][c] = m1.m[r][0] * m2.m[0][c] +
-                       m1.m[r][1] * m2.m[1][c] +
-                       m1.m[r][2] * m2.m[2][c] +
-                       m1.m[r][3] * m2.m[3][c];
   return matrix;
 }
 
