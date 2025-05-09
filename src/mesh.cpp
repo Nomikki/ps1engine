@@ -89,6 +89,28 @@ bool Mesh::LoadObjFromFile(std::string filename)
     }
   }
 
+  // After loading all vertices, calculate AABB
+  if (!tris.empty()) {
+    // Initialize AABB with first vertex
+    aabb.min = tris[0].p[0];
+    aabb.max = tris[0].p[0];
+
+    // Expand AABB to include all vertices
+    for (const auto& tri : tris) {
+      for (int i = 0; i < 3; i++) {
+        // Update min bounds
+        aabb.min.x = std::min(aabb.min.x, tri.p[i].x);
+        aabb.min.y = std::min(aabb.min.y, tri.p[i].y);
+        aabb.min.z = std::min(aabb.min.z, tri.p[i].z);
+
+        // Update max bounds
+        aabb.max.x = std::max(aabb.max.x, tri.p[i].x);
+        aabb.max.y = std::max(aabb.max.y, tri.p[i].y);
+        aabb.max.z = std::max(aabb.max.z, tri.p[i].z);
+      }
+    }
+  }
+
   printf("aabb: ");
   printVector(aabb.min);
   printf(" --- ");

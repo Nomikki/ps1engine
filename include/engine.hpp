@@ -27,6 +27,14 @@
 #include "componentManager.hpp"
 #include "camera.hpp"
 
+struct TextureMetadata {
+    int width;
+    int height;
+    size_t size;
+    bool isDithered;
+    std::string filename;
+};
+
 class Engine
 {
 public:
@@ -74,6 +82,7 @@ public:
   int height;
 
   std::vector<sf::Image> textureImage;
+  std::vector<TextureMetadata> textureMetadata;
 
   std::vector<Triangle> vecTrianglesToRaster;
 

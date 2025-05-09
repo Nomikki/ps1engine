@@ -1,6 +1,21 @@
 FLAGS := -Iinclude  -Llib -Os -s -O3 -O3 -march=native -ffast-math -funroll-loops -std=c++17 -msse
 LDLINKS := -lsfml-graphics -lsfml-window -lsfml-system
 
+# Detect operating system
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := Windows
+    EXE_EXT := .exe
+    RM_CMD := rmdir /s /q
+    MKDIR_CMD := mkdir
+    RUN_PREFIX := cmd /C
+else
+    DETECTED_OS := $(shell uname -s)
+    EXE_EXT :=
+    RM_CMD := rm -rf
+    MKDIR_CMD := mkdir -p
+    RUN_PREFIX :=
+endif
+
 all:
 
 CFILES  := main.cpp engine.cpp utility.cpp mesh.cpp meshManager.cpp component.cpp \
@@ -8,7 +23,7 @@ CFILES  := main.cpp engine.cpp utility.cpp mesh.cpp meshManager.cpp component.cp
 COMPILER := g++
 SRCDIR := src
 OBJDIR := obj
-EXE := ps1_clone.exe
+EXE := ps1_clone$(EXE_EXT)
 BUILDDIR := build
 OUTPUT := $(BUILDDIR)/$(EXE)
 
@@ -27,22 +42,24 @@ endef
 $(eval $(call SOURCES,${CFILES}))
 
 all : ${obj.cpp} build2 run
-	
 
 ${obj.cpp} : % :
 	$(COMPILER) $(FLAGS)  -c $^ -o $@
 
 ${OBJDIR} :
-	mkdir $@
+	$(MKDIR_CMD) $@
 
 build2: 
-	
 	$(COMPILER) $(FLAGS) -o $(OUTPUT) $(obj.cpp) $(LDLINKS)
 
 run:
-	cmd /C "cd $(BUILDDIR) && $(EXE)"
+ifeq ($(DETECTED_OS),Windows)
+	$(RUN_PREFIX) "cd $(BUILDDIR) && $(EXE)"
+else
+	cd $(BUILDDIR) && ./$(EXE)
+endif
 
 clean:	
-	rmdir /s /q obj
-	mkdir obj
+	$(RM_CMD) obj
+	$(MKDIR_CMD) obj
 

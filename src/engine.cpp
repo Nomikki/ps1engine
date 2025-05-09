@@ -80,34 +80,23 @@ Engine::Engine(int targetFPS, float scale, const char *title)
 
 int Engine::LoadTexture(std::string filename)
 {
-
-  sf::Image tempImage;
-
-  if (tempImage.loadFromFile(filename))
+  sf::Image img;
+  if (!img.loadFromFile(filename))
   {
-    sf::Image im;
-    im.create(tempImage.getSize().x, tempImage.getSize().y);
-    textureImage.push_back(im);
+    printf("Failed to load texture: %s\n", filename.c_str());
+    return -1;
   }
 
-  if (!textureImage[textureImage.size() - 1].loadFromFile(filename))
-  {
-    printf("'%s' not found.\n", (char *)filename.c_str());
-  }
+  // Create and populate metadata
+  TextureMetadata meta;
+  meta.width = img.getSize().x;
+  meta.height = img.getSize().y;
+  meta.size = img.getSize().x * img.getSize().y * 4; // 4 bytes per pixel (RGBA)
+  meta.isDithered = false;
+  meta.filename = filename;
 
-  // textureImage.create(tempImage.getSize().x, tempImage.getSize().y);
-
-  for (int y = 0; y < textureImage[textureImage.size() - 1].getSize().y; y++)
-  {
-    for (int x = 0; x < textureImage[textureImage.size() - 1].getSize().x; x++)
-    {
-      sf::Color col = tempImage.getPixel(x, y);
-      Color c = {col.r, col.g, col.b};
-      c = quantise(c);
-
-      textureImage[textureImage.size() - 1].setPixel(x, y, {c.r, c.g, c.b});
-    }
-  }
+  textureImage.push_back(img);
+  textureMetadata.push_back(meta);
 
   return textureImage.size() - 1;
 }
@@ -815,6 +804,16 @@ void Engine::render(int debugMode)
       stData.numOfTrianglesPerSecond = 0;
     }
   }
+
+  // Update triangle statistics
+  stData.numOfTrianglesPerFrame = vecTrianglesToRaster.size();
+  stData.totalTrianglesRendered += stData.numOfTrianglesPerFrame;
+  
+  // Update triangle count graph
+  if (stData.triangle_count_graph.size() >= stData.graphSize) {
+      stData.triangle_count_graph.erase(stData.triangle_count_graph.begin());
+  }
+  stData.triangle_count_graph.push_back(stData.numOfTrianglesPerFrame);
 
   /*
   Color col;
