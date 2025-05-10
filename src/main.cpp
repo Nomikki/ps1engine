@@ -1,94 +1,112 @@
-
 #include <engine.hpp>
+#include <iostream>
+#include <string>
 
 bool needUpdate = true;
 
 void handleInputs(Engine *engine, Camera *camera, float cameraSpeed, float cameraTurning)
 {
+  if (!engine->components.components.empty()) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
+    {
+      engine->components.components[0].transform.rot.y += cameraTurning * engine->getClock();
+      engine->components.components[0].transform.calculateAngles(
+        engine->components.components[0].transform.rot.x,
+        engine->components.components[0].transform.rot.y,
+        engine->components.components[0].transform.rot.z
+      );
+      needUpdate = true;
+    }
 
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-  {
-    camera->pos = Vector_Add(camera->pos, camera->vRight);
-    needUpdate = true;
-  }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
+    {
+      engine->components.components[0].transform.rot.y -= cameraTurning * engine->getClock();
+      engine->components.components[0].transform.calculateAngles(
+        engine->components.components[0].transform.rot.x,
+        engine->components.components[0].transform.rot.y,
+        engine->components.components[0].transform.rot.z
+      );
+      needUpdate = true;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
+    {
+      engine->components.components[0].transform.rot.x += cameraTurning * engine->getClock();
+      engine->components.components[0].transform.calculateAngles(
+        engine->components.components[0].transform.rot.x,
+        engine->components.components[0].transform.rot.y,
+        engine->components.components[0].transform.rot.z
+      );
+      needUpdate = true;
+    }
 
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-  {
-    camera->pos = Vector_Sub(camera->pos, camera->vRight);
-    needUpdate = true;
-  }
-
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
-  {
-    camera->pos.y -= cameraSpeed * engine->getClock();
-    needUpdate = true;
-  }
-
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::F))
-  {
-    camera->pos.y += cameraSpeed * engine->getClock();
-    needUpdate = true;
-  }
-
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-  {
-    camera->pos = Vector_Add(camera->pos, camera->vForward);
-    needUpdate = true;
-  }
-
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-  {
-    camera->pos = Vector_Sub(camera->pos, camera->vForward);
-    needUpdate = true;
-  }
-
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left))
-  {
-    camera->yaw += cameraTurning * engine->getClock();
-    needUpdate = true;
-  }
-
-  if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right))
-  {
-    camera->yaw -= cameraTurning * engine->getClock();
-    needUpdate = true;
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down))
+    {
+      engine->components.components[0].transform.rot.x -= cameraTurning * engine->getClock();
+      engine->components.components[0].transform.calculateAngles(
+        engine->components.components[0].transform.rot.x,
+        engine->components.components[0].transform.rot.y,
+        engine->components.components[0].transform.rot.z
+      );
+      needUpdate = true;
+    }
   }
 }
 
-int main()
+bool loadModel(Engine* engine, const std::string& filename, const Vec3& position = {0, 0, 0})
 {
-  // init
-  
-  Engine *engine = new Engine(0, 4, "PS1 clone");
-  engine->setSort(false);
-  engine->LoadTexture("Spyro/Glimmer_ObjectTextures.png");
-  engine->LoadTexture("Low.png");
+    try {
+        engine->components.createFromFile(filename, -1, position);
+        std::cout << "Successfully loaded model: " << filename << std::endl;
+        return true;
+    } catch (const std::exception& e) {
+        std::cerr << "Error loading model " << filename << ": " << e.what() << std::endl;
+        return false;
+    }
+}
 
-  Camera *camera = new Camera();
-
-  for (int x = 0; x < 10; x++)
-    engine->components.createFromFile("spyro/spyro.obj", 0, Vec3{x * 2.0f, 0, 0});
-
-  engine->components.createFromFile("Artisans Hub.obj", 1);
-
-  const float cameraSpeed = 5;
-  const float cameraTurning = 1.0;
-
-  while (engine->isOpen())
-  {
-    engine->checkEvents();
-
-    handleInputs(engine, camera, cameraSpeed, cameraTurning);
-    if (needUpdate)
-    {
-      camera->Update(cameraSpeed * engine->getClock());
-      camera->vTarget.y = camera->pos.y + 0.3;
+int main(int argc, char* argv[])
+{
+    if (argc != 2) {
+        std::cerr << "Error: Please specify exactly one model file" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <model.obj>" << std::endl;
+        return 1;
     }
 
-    engine->calculateTriangles(camera->pos, camera->vTarget, camera->vUp);
-    engine->renderAll();
-    needUpdate = false;
-  }
+    Engine* engine = new Engine(60, 4, "PS1 Model Viewer");
+    engine->setSort(false);
+    engine->setDither(true);
 
-  delete engine;
+    Camera* camera = new Camera();
+    camera->pos = {0, 0, -5};
+    camera->vTarget = {0, 0, 0};
+    camera->vUp = {0, 1, 0};
+
+    if (!loadModel(engine, argv[1])) {
+        std::cerr << "Error: Failed to load model" << std::endl;
+        delete camera;
+        delete engine;
+        return 1;
+    }
+
+    const float cameraSpeed = 5;
+    const float cameraTurning = 1.0;
+
+    while (engine->isOpen())
+    {
+        engine->checkEvents();
+
+        handleInputs(engine, camera, cameraSpeed, cameraTurning);
+        if (needUpdate)
+        {
+            camera->Update(cameraSpeed * engine->getClock());
+        }
+
+        engine->calculateTriangles(camera->pos, camera->vTarget, camera->vUp);
+        engine->renderAll();
+        needUpdate = false;
+    }
+
+    delete camera;
+    delete engine;
+    return 0;
 }

@@ -94,7 +94,6 @@ while (engine->isOpen()) {
 - [x] AABB boxes
 - [ ] Point lights
 - [ ] Gouraud shading
-- [ ] Precalculate sin/cos
 - [ ] Use fixed point numbers
 - [ ] Store triangle normals
 - [ ] Shared resources

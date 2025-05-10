@@ -23,7 +23,7 @@ CFILES  := main.cpp engine.cpp utility.cpp mesh.cpp meshManager.cpp component.cp
 COMPILER := g++
 SRCDIR := src
 OBJDIR := obj
-EXE := ps1_clone$(EXE_EXT)
+EXE := ps1_engine$(EXE_EXT)
 BUILDDIR := build
 OUTPUT := $(BUILDDIR)/$(EXE)
 
@@ -51,13 +51,6 @@ ${OBJDIR} :
 
 build2: 
 	$(COMPILER) $(FLAGS) -o $(OUTPUT) $(obj.cpp) $(LDLINKS)
-
-run:
-ifeq ($(DETECTED_OS),Windows)
-	$(RUN_PREFIX) "cd $(BUILDDIR) && $(EXE)"
-else
-	cd $(BUILDDIR) && ./$(EXE)
-endif
 
 clean:	
 	$(RM_CMD) obj
