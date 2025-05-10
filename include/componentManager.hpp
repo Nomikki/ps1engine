@@ -7,7 +7,8 @@
 struct Components
 {
   std::vector<Component> components;
-  bool createFromFile(std::string filename, int textureID = 0, Vec3 pos = {0, 0, 0});
+  bool createFromFile(std::string filename, int textureID, Vec3 pos, bool centerComponent = true);
+  Component &getOrCreate(uint32_t ID);
 };
 
 #endif // __COMPONENTMANAGER_H__

@@ -1,48 +1,51 @@
-FLAGS := -Iinclude  -Llib -Os -s -O3 -O3 -march=native -ffast-math -funroll-loops -std=c++17 -msse
-LDLINKS := -lsfml-graphics -lsfml-window -lsfml-system
+# Compiler and flags
+CXX := g++
+CXXFLAGS := -Iinclude -Llib -Os -s -O3 -march=native -ffast-math -funroll-loops -std=c++17 -msse
+LDFLAGS := -lsfml-graphics -lsfml-window -lsfml-system
 
-all:
-
-CFILES  := main.cpp engine.cpp utility.cpp mesh.cpp meshManager.cpp component.cpp \
-					componentManager.cpp transform.cpp camera.cpp
-COMPILER := g++
+# Directories and output
 SRCDIR := src
 OBJDIR := obj
-EXE := ps1_clone.exe
 BUILDDIR := build
-OUTPUT := $(BUILDDIR)/$(EXE)
+TARGET := $(BUILDDIR)/ps1_engine
 
-target = ${OBJDIR}/$(patsubst %.cpp,%.o,$(notdir ${1}))
-obj.cpp :=
+# Detect operating system
+ifeq ($(OS),Windows_NT)
+    EXE_EXT := .exe
+    RM := rmdir /s /q
+    MKDIR := mkdir
+else
+    EXE_EXT :=
+    RM := rm -rf
+    MKDIR := mkdir -p
+endif
 
-define obj
-  $(call target,${1}) : ${SRCDIR}/${1} | ${OBJDIR}
-  obj$(suffix ${1}) += $(call target,${1})
-endef
+TARGET := $(TARGET)$(EXE_EXT)
 
-define SOURCES
-	$(foreach src,${src}${1},$(eval $(call obj,${src})))
-endef
+# Source and object files
+SOURCES := main.cpp engine.cpp utility.cpp mesh.cpp meshManager.cpp component.cpp \
+           componentManager.cpp transform.cpp camera.cpp
+OBJECTS := $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))
 
-$(eval $(call SOURCES,${CFILES}))
+# Default target
+all: $(TARGET)
 
-all : ${obj.cpp} build2 run
-	
+# Link target
+$(TARGET): $(OBJECTS) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
-${obj.cpp} : % :
-	$(COMPILER) $(FLAGS)  -c $^ -o $@
+# Compile source to object
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-${OBJDIR} :
-	mkdir $@
+# Ensure object and build directories exist
+$(OBJDIR) $(BUILDDIR):
+	$(MKDIR) $@
 
-build2: 
-	
-	$(COMPILER) $(FLAGS) -o $(OUTPUT) $(obj.cpp) $(LDLINKS)
+# Clean up build artifacts
+clean:
+	$(RM) $(OBJDIR)
+	$(RM) $(BUILDDIR)
 
-run:
-	cmd /C "cd $(BUILDDIR) && $(EXE)"
 
-clean:	
-	rmdir /s /q obj
-	mkdir obj
-
+rebuild: clean all

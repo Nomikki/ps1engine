@@ -37,7 +37,7 @@ mat4x4 Matrix_MakeIdentity()
 mat4x4 Matrix_MakeRotationX(float fAngleRad)
 {
   mat4x4 matrix;
-  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Muunna radiaanit asteiksi
+  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Convert radians to degrees
   a = (a % 360 + 360) % 360;
 
   float cosff = costable[a];
@@ -56,7 +56,7 @@ mat4x4 Matrix_MakeRotationX(float fAngleRad)
 }
 mat4x4 Matrix_MakeRotationY(float fAngleRad)
 {
-  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Muunna radiaanit asteiksi
+  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Convert radians to degrees
   a = (a % 360 + 360) % 360;
 
   float cosff = costable[a];
@@ -75,7 +75,7 @@ mat4x4 Matrix_MakeRotationY(float fAngleRad)
 }
 mat4x4 Matrix_MakeRotationZ(float fAngleRad)
 {
-  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Muunna radiaanit asteiksi
+  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Convert radians to degrees
   a = (a % 360 + 360) % 360;
 
   float cosff = costable[a];
@@ -388,6 +388,7 @@ int Triangle_CLipAgainstPlane(Vec3 &plane_p, Vec3 &plane_n, Triangle &in_tri, Tr
 
     return 2; // Return two newly formed triangles which form a quad
   }
+  return 0; // Default return, though theoretically unreachable
 }
 
 Color quantise(Color &color)

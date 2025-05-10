@@ -11,9 +11,11 @@
 
 #include <cmath>
 #include <fstream>
-#include <strstream>
+#include <sstream>
 #include <vector>
 #include <emmintrin.h>
+#include <array>
+#include <cstdint>
 
 struct Color
 {
@@ -70,7 +72,9 @@ struct StatisticData
   int graphSize;
   uint32_t numOfTrianglesPerFrame;
   uint32_t numOfTrianglesPerSecond;
+  uint32_t totalTrianglesRendered;
   std::vector<float> fps_graph;
+  std::vector<uint32_t> triangle_count_graph;
 };
 
 Color quantise(Color &color);
@@ -130,5 +134,30 @@ t clamp2(t x, t min, t max)
 float max(float a, float b);
 void printVector(Vec3 &v);
 Color mixRGB(uint8_t r1, uint8_t g1, uint8_t b1, uint8_t r2, uint8_t g2, uint8_t b2, float v);
+
+// Lookup tables for sin/cos
+constexpr int TRIG_TABLE_SIZE = 360;
+extern std::array<float, TRIG_TABLE_SIZE> sin_table;
+extern std::array<float, TRIG_TABLE_SIZE> cos_table;
+
+// Function to get sin from lookup table
+inline float fast_sin(float angle_degrees) {
+    int index = static_cast<int>(angle_degrees) % TRIG_TABLE_SIZE;
+    if (index < 0) index += TRIG_TABLE_SIZE;
+    return sin_table[index];
+}
+
+// Function to get cos from lookup table
+inline float fast_cos(float angle_degrees) {
+    int index = static_cast<int>(angle_degrees) % TRIG_TABLE_SIZE;
+    if (index < 0) index += TRIG_TABLE_SIZE;
+    return cos_table[index];
+}
+
+// Function to normalize a value to a range
+template<typename T>
+T normalize(T value, T min, T max) {
+    return (value - min) / (max - min);
+}
 
 #endif // __UTILITY_H__
