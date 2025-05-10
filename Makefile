@@ -41,7 +41,7 @@ endef
 
 $(eval $(call SOURCES,${CFILES}))
 
-all : ${obj.cpp} build2 run
+all : ${obj.cpp} build2
 
 ${obj.cpp} : % :
 	$(COMPILER) $(FLAGS)  -c $^ -o $@
