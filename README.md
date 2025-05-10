@@ -51,12 +51,6 @@ A C++ implementation of a PlayStation 1-style 3D engine that recreates the disti
 ## Building
 
 ```bash
-# Create build directory
-mkdir build
-cd build
-
-# Configure with CMake
-cmake ..
 
 # Build
 make
