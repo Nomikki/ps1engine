@@ -139,17 +139,17 @@ Engine::~Engine()
 
 void Engine::ClearDepthBufferWithSIMD(float *pDepthBuffer, size_t size)
 {
-  // Tarkista, että koko on jaollinen 4:llä, koska SSE-instruktiot käsittelevät 128-bittisiä lohkoja
+  // Check that the size is divisible by 4, because SSE instructions handle 128-bit blocks
   if (size % 4 != 0)
   {
-    // Voit käyttää perinteistä silmukkaa jäljellä oleville arvoille
+    // You can use the traditional loop for the remaining values
     for (size_t i = size - (size % 4); i < size; ++i)
     {
       pDepthBuffer[i] = 0.0f;
     }
   }
 
-  // Nollaa syvyyspuskuri SIMD-instruktiolla
+  // Reset the depth buffer with the SIMD instruction
   for (size_t i = 0; i < size / 4; ++i)
   {
     _mm_store_ps(&pDepthBuffer[i * 4], zero);
