@@ -68,6 +68,7 @@ public:
   void calculateTriangles(Vec3 &camera, Vec3 &vTarget, Vec3 &vUp);
   void setSort(bool b);
   void setDither(bool v);
+  void setFogColor(const Color& new_color);
 
   bool checkIfAABBisOnScreen(AABB &aabb, mat4x4 &matWorld, mat4x4 &matView);
 

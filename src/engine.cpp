@@ -1077,3 +1077,21 @@ void Engine::setDither(bool v)
 {
   useDither = v;
 }
+
+void Engine::setFogColor(const Color& new_color)
+{
+  this->fogColor = new_color;
+  // Re-initialize clearScreenPtr with the new fog color
+  if (clearScreenPtr) { // Ensure it was allocated
+    for (int y = 0; y < height; y++)
+    {
+      for (int x = 0; x < width; x++)
+      {
+        int i = (y * width + x) * 3;
+        clearScreenPtr[i] = this->fogColor.r;
+        clearScreenPtr[i + 1] = this->fogColor.g;
+        clearScreenPtr[i + 2] = this->fogColor.b;
+      }
+    }
+  }
+}

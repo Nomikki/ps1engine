@@ -2,6 +2,8 @@
 
 A C++ implementation of a PlayStation 1-style 3D engine that recreates the distinctive visual style of PS1 games, including texture quantization, dithering, and affine texture mapping.
 
+![Teapot Demo](images/teapot.png)
+
 ## Features
 
 - 3D rendering with PS1-style visual effects
