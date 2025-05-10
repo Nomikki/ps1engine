@@ -100,7 +100,6 @@ int main(int argc, char *argv[]) {
   const float cameraTurning = 1.0;
 
   while (engine->isOpen()) {
-    engine->clear();
     engine->checkEvents();
 
     handleInputs(engine, camera, cameraSpeed, cameraTurning);
