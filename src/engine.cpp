@@ -78,6 +78,23 @@ Engine::Engine(int targetFPS, float scale, const char *title)
   depthBufferSize = width * height;
 }
 
+void Engine::QuantizeImage(sf::Image &img)
+{
+    // Get image dimensions
+    unsigned int width = img.getSize().x;
+    unsigned int height = img.getSize().y;
+
+    // Quantize each pixel
+    for (unsigned int y = 0; y < height; y++) {
+        for (unsigned int x = 0; x < width; x++) {
+            sf::Color pixel = img.getPixel(x, y);
+            Color color = {pixel.r, pixel.g, pixel.b};
+            Color quantized = quantise(color);
+            img.setPixel(x, y, sf::Color(quantized.r, quantized.g, quantized.b, pixel.a));
+        }
+    }
+}
+
 int Engine::LoadTexture(std::string filename)
 {
   sf::Image img;
@@ -87,12 +104,16 @@ int Engine::LoadTexture(std::string filename)
     return -1;
   }
 
+  // Quantize the image during loading
+  QuantizeImage(img);
+
   // Create and populate metadata
   TextureMetadata meta;
   meta.width = img.getSize().x;
   meta.height = img.getSize().y;
   meta.size = img.getSize().x * img.getSize().y * 4; // 4 bytes per pixel (RGBA)
   meta.isDithered = false;
+  meta.isQuantized = true;
   meta.filename = filename;
 
   textureImage.push_back(img);
@@ -182,8 +203,6 @@ inline Color Engine::getPixelFrom(int x, int y, uint8_t *buffer)
 
 void Engine::Dither_FloydSteinberg()
 {
-
-  // pDest->copy(*pSource, 0, 0);
   int32_t w = width;
   int32_t h = height;
 
@@ -196,12 +215,8 @@ void Engine::Dither_FloydSteinberg()
   constexpr float step4 = 1.0f / step;
 
   Color pixel;
-  Color qPixel; // quantise(pixel);
-
   int32_t error[3];
-
   int32_t k[3];
-
   Color p;
   int px, py;
 
@@ -209,16 +224,15 @@ void Engine::Dither_FloydSteinberg()
   {
     for (int x = 1; x < w - 1; x++)
     {
+      pixel = getPixelFrom(x, y, videoBufferBack);
 
-      pixel = getPixelFrom(x, y, videoBufferBack); // pDest->getPixel(x, y);
-
-      qPixel = quantise(pixel);
+      // Skip quantization since it's already done during loading
+      Color qPixel = pixel;
 
       error[0] = pixel.r - qPixel.r;
       error[1] = pixel.g - qPixel.g;
       error[2] = pixel.b - qPixel.b;
 
-      // pDest->setPixel(x, y, {qPixel.r, qPixel.g, qPixel.b, 255});
       setPixelTo(x, y, qPixel, videoBufferBack);
 
       auto updatePixel = [&x, &y, &error, &w, &h, &k, &p, &px, &py, this](const Vec2 &vOffset, const float fErrorBias)
@@ -234,12 +248,8 @@ void Engine::Dither_FloydSteinberg()
         if (py > h)
           py = h;
 
-        // sf::Color p = pDest->getPixel(px, py);
         p = this->getPixelFrom(px, py, videoBufferBack);
-        // if (p.r == 0 && p.g == 0 && p.b == 0)
-        // return;
 
-        // if (p.a == 255)
         k[0] = p.r + int32_t(float(error[0]) * fErrorBias);
         k[1] = p.g + int32_t(float(error[1]) * fErrorBias);
         k[2] = p.b + int32_t(float(error[2]) * fErrorBias);

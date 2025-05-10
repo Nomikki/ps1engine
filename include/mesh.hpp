@@ -3,7 +3,6 @@
 
 /*
   Todo:
-  - create AABB boxes
   - precalculate normals (for flat and gouraud)
 */
 

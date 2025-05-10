@@ -3,13 +3,10 @@
 
 /*
   todo:
-    - meta data for textures (w, h, data, dithered, size etc)
-    - 2d arrays for pixels, update render only once per frame
     - point lights
     - gouraud shading
     - when loading image data, quantise it before rendering
       -> when rendering, apply only dither, not quantise
-    - check AABB boxes
     - shared resources
 */
 
@@ -32,6 +29,7 @@ struct TextureMetadata {
     int height;
     size_t size;
     bool isDithered;
+    bool isQuantized;
     std::string filename;
 };
 
@@ -46,6 +44,7 @@ public:
   inline void setPixelTo(int x, int y, Color &color, uint8_t *buffer);
 
   int LoadTexture(std::string filename);
+  void QuantizeImage(sf::Image &img);
 
   void drawLine(int sx, int sy, int ex, int ey, Color color);
   void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, Color color);
