@@ -14,7 +14,7 @@ public:
   Component();
   ~Component();
 
-  bool createMeshFromFile(std::string filename, int textureID);
+  bool createMeshFromFile(std::string filename, int textureID, bool centerMesh = true);
   Meshes meshes;
   Transform transform;
 

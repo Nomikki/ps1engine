@@ -130,6 +130,18 @@ private:
   sf::Uint8 *clearScreenPtr;
 
   float *pDepthBuffer = nullptr;
+
+  // Helper function for texturedTriangle
+  static void SortVerticesByY(Vec3 &p1, Vec3 &p2, Vec3 &p3, 
+                              UV &tex1, UV &tex2, UV &tex3, 
+                              float &w_val1, float &w_val2, float &w_val3);
+
+  void ScanlineFillTexturedPart(int y_start, int y_end,
+                                  float x_edge1_start, const UV& uv_edge1_start, float w_edge1_start,
+                                  float x_edge2_start, const UV& uv_edge2_start, float w_edge2_start,
+                                  float dx_edge1_step, float du_edge1_step, float dv_edge1_step, float dw_edge1_step,
+                                  float dx_edge2_step, float du_edge2_step, float dv_edge2_step, float dw_edge2_step,
+                                  sf::Image &texture, const Color &base_color);
 };
 
 #endif // __ENGINE_H__

@@ -14,7 +14,7 @@ struct Mesh
 {
   std::vector<Triangle> tris;
   AABB aabb;
-  bool LoadObjFromFile(std::string filename);
+  bool LoadObjFromFile(std::string filename, bool centerModel = true);
   int textureID;
 };
 

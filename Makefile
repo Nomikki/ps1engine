@@ -1,58 +1,51 @@
-FLAGS := -Iinclude  -Llib -Os -s -O3 -O3 -march=native -ffast-math -funroll-loops -std=c++17 -msse
-LDLINKS := -lsfml-graphics -lsfml-window -lsfml-system
+# Compiler and flags
+CXX := g++
+CXXFLAGS := -Iinclude -Llib -Os -s -O3 -march=native -ffast-math -funroll-loops -std=c++17 -msse
+LDFLAGS := -lsfml-graphics -lsfml-window -lsfml-system
+
+# Directories and output
+SRCDIR := src
+OBJDIR := obj
+BUILDDIR := build
+TARGET := $(BUILDDIR)/ps1_engine
 
 # Detect operating system
 ifeq ($(OS),Windows_NT)
-    DETECTED_OS := Windows
     EXE_EXT := .exe
-    RM_CMD := rmdir /s /q
-    MKDIR_CMD := mkdir
-    RUN_PREFIX := cmd /C
+    RM := rmdir /s /q
+    MKDIR := mkdir
 else
-    DETECTED_OS := $(shell uname -s)
     EXE_EXT :=
-    RM_CMD := rm -rf
-    MKDIR_CMD := mkdir -p
-    RUN_PREFIX :=
+    RM := rm -rf
+    MKDIR := mkdir -p
 endif
 
-all:
+TARGET := $(TARGET)$(EXE_EXT)
 
-CFILES  := main.cpp engine.cpp utility.cpp mesh.cpp meshManager.cpp component.cpp \
-					componentManager.cpp transform.cpp camera.cpp
-COMPILER := g++
-SRCDIR := src
-OBJDIR := obj
-EXE := ps1_engine$(EXE_EXT)
-BUILDDIR := build
-OUTPUT := $(BUILDDIR)/$(EXE)
+# Source and object files
+SOURCES := main.cpp engine.cpp utility.cpp mesh.cpp meshManager.cpp component.cpp \
+           componentManager.cpp transform.cpp camera.cpp
+OBJECTS := $(addprefix $(OBJDIR)/, $(SOURCES:.cpp=.o))
 
-target = ${OBJDIR}/$(patsubst %.cpp,%.o,$(notdir ${1}))
-obj.cpp :=
+# Default target
+all: $(TARGET)
 
-define obj
-  $(call target,${1}) : ${SRCDIR}/${1} | ${OBJDIR}
-  obj$(suffix ${1}) += $(call target,${1})
-endef
+# Link target
+$(TARGET): $(OBJECTS) | $(BUILDDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
 
-define SOURCES
-	$(foreach src,${src}${1},$(eval $(call obj,${src})))
-endef
+# Compile source to object
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp | $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(eval $(call SOURCES,${CFILES}))
+# Ensure object and build directories exist
+$(OBJDIR) $(BUILDDIR):
+	$(MKDIR) $@
 
-all : ${obj.cpp} build2
+# Clean up build artifacts
+clean:
+	$(RM) $(OBJDIR)
+	$(RM) $(BUILDDIR)
 
-${obj.cpp} : % :
-	$(COMPILER) $(FLAGS)  -c $^ -o $@
 
-${OBJDIR} :
-	$(MKDIR_CMD) $@
-
-build2: 
-	$(COMPILER) $(FLAGS) -o $(OUTPUT) $(obj.cpp) $(LDLINKS)
-
-clean:	
-	$(RM_CMD) obj
-	$(MKDIR_CMD) obj
-
+rebuild: clean all

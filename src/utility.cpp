@@ -388,6 +388,7 @@ int Triangle_CLipAgainstPlane(Vec3 &plane_p, Vec3 &plane_n, Triangle &in_tri, Tr
 
     return 2; // Return two newly formed triangles which form a quad
   }
+  return 0; // Default return, though theoretically unreachable
 }
 
 Color quantise(Color &color)

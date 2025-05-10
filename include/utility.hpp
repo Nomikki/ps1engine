@@ -11,7 +11,7 @@
 
 #include <cmath>
 #include <fstream>
-#include <strstream>
+#include <sstream>
 #include <vector>
 #include <emmintrin.h>
 #include <array>
