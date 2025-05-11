@@ -59,13 +59,6 @@ set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(ARCHIVE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib) # Store .a or .lib files in build/lib
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${ARCHIVE_OUTPUT_PATH})
 
-# Custom clean command (optional, CMake handles most cleaning)
-add_custom_target(clean_build
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR} # Recreate build dir
-    COMMENT "Cleaning build directory"
-)
-
 message(STATUS "Compiler: ${CMAKE_CXX_COMPILER}")
 message(STATUS "Compiler flags: ${CMAKE_CXX_FLAGS}")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}") 
