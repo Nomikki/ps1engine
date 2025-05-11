@@ -1,17 +1,5 @@
 #include "utility.hpp"
 
-float sintable[360];
-float costable[360];
-
-void generate_sincos_lookupTables()
-{
-  for (int i = 0; i < 360; i++)
-  {
-    sintable[i] = sin(i / 180.0 * 3.1415f);
-    costable[i] = cos(i / 180.0 * 3.1415f);
-  }
-}
-
 Vec3 Matrix_MultiplyVector(mat4x4 &m, Vec3 &i)
 {
 
@@ -37,59 +25,51 @@ mat4x4 Matrix_MakeIdentity()
 mat4x4 Matrix_MakeRotationX(float fAngleRad)
 {
   mat4x4 matrix;
-  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Convert radians to degrees
-  a = (a % 360 + 360) % 360;
+  float fAngleDeg = fAngleRad * (180.0f / M_PI);
 
-  float cosff = costable[a];
-  float sinff = sintable[a];
+  float cos_val = fast_cos(fAngleDeg);
+  float sin_val = fast_sin(fAngleDeg);
 
-  // float cosff = cosf(fAngleRad);
-  // float sinff = sinf(fAngleRad);
-
-  matrix.m[0][0] = 1;
-  matrix.m[1][1] = cosff;  // cosf(fAngleRad);
-  matrix.m[1][2] = sinff;  // sinf(fAngleRad);
-  matrix.m[2][1] = -sinff; //-sinf(fAngleRad);
-  matrix.m[2][2] = cosff;  // cosf(fAngleRad);
-  matrix.m[3][3] = 1;
+  matrix.m[0][0] = 1.0f;
+  matrix.m[1][1] = cos_val;
+  matrix.m[1][2] = sin_val;
+  matrix.m[2][1] = -sin_val;
+  matrix.m[2][2] = cos_val;
+  matrix.m[3][3] = 1.0f;
   return matrix;
 }
+
 mat4x4 Matrix_MakeRotationY(float fAngleRad)
 {
-  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Convert radians to degrees
-  a = (a % 360 + 360) % 360;
-
-  float cosff = costable[a];
-  float sinff = sintable[a];
-
-  // float cosff = cosf(fAngleRad);
-
   mat4x4 matrix;
-  matrix.m[0][0] = cosff;  // cosf(fAngleRad);
-  matrix.m[0][2] = sinff;  // sinf(fAngleRad);
-  matrix.m[2][0] = -sinff; // -sinf(fAngleRad);
-  matrix.m[1][1] = 1;
-  matrix.m[2][2] = cosff; // cosf(fAngleRad);
-  matrix.m[3][3] = 1;
+  float fAngleDeg = fAngleRad * (180.0f / M_PI);
+
+  float cos_val = fast_cos(fAngleDeg);
+  float sin_val = fast_sin(fAngleDeg);
+
+  matrix.m[0][0] = cos_val;
+  matrix.m[0][2] = sin_val;
+  matrix.m[2][0] = -sin_val;
+  matrix.m[1][1] = 1.0f;
+  matrix.m[2][2] = cos_val;
+  matrix.m[3][3] = 1.0f;
   return matrix;
 }
+
 mat4x4 Matrix_MakeRotationZ(float fAngleRad)
 {
-  int a = static_cast<int>(fAngleRad * (180.0 / 3.1415)); // Convert radians to degrees
-  a = (a % 360 + 360) % 360;
-
-  float cosff = costable[a];
-  float sinff = sintable[a];
-
-  // float cosff = cosf(fAngleRad);
-
   mat4x4 matrix;
-  matrix.m[0][0] = cosff;  // cosf(fAngleRad);
-  matrix.m[0][1] = sinff;  // sinf(fAngleRad);
-  matrix.m[1][0] = -sinff; //-sinf(fAngleRad);
-  matrix.m[1][1] = cosff;  // cosf(fAngleRad);
-  matrix.m[2][2] = 1;
-  matrix.m[3][3] = 1;
+  float fAngleDeg = fAngleRad * (180.0f / M_PI);
+
+  float cos_val = fast_cos(fAngleDeg);
+  float sin_val = fast_sin(fAngleDeg);
+
+  matrix.m[0][0] = cos_val;
+  matrix.m[0][1] = sin_val;
+  matrix.m[1][0] = -sin_val;
+  matrix.m[1][1] = cos_val;
+  matrix.m[2][2] = 1.0f;
+  matrix.m[3][3] = 1.0f;
   return matrix;
 }
 
