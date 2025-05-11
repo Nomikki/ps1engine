@@ -16,6 +16,7 @@ Engine::Engine(int targetFPS, float scale, const char *title)
   this->scale = scale;
   setDither(false);
   setSort(false);
+  enableVertexSnapping = true;
   generate_sincos_lookupTables();
 
   window.create(sf::VideoMode(width * scale, height * scale), title, sf::Style::Default);
@@ -607,9 +608,18 @@ void Engine::fillTriangle(Vec3 &t1, Vec3 &t2, Vec3 &t3, Color color)
 
 void Engine::renderTriangle(Triangle &triangle, int textureID)
 {
-  switch (rMode)
+  if (enableVertexSnapping)
   {
-  case RenderMode::textured:
+    for (int i = 0; i < 3; ++i)
+    {
+      triangle.p[i].x = roundf(triangle.p[i].x);
+      triangle.p[i].y = roundf(triangle.p[i].y);
+      // triangle.p[i].z = roundf(triangle.p[i].z); // Optional: snapping Z can affect depth precision
+    }
+  }
+
+  if (rMode == RenderMode::textured)
+  {
     if (textureID >= 0 && textureID < textureImage.size()) {
       texturedTriangle(triangle.p[0], triangle.t[0], triangle.t[0].w,
                       triangle.p[1], triangle.t[1], triangle.t[1].w,
@@ -618,18 +628,17 @@ void Engine::renderTriangle(Triangle &triangle, int textureID)
     } else {
       fillTriangle(triangle.p[0], triangle.p[1], triangle.p[2], triangle.color);
     }
-    break;
-  case RenderMode::filled:
+  }
+  else if (rMode == RenderMode::filled)
+  {
     fillTriangle(triangle.p[0], triangle.p[1], triangle.p[2], triangle.color);
-    break;
-  case RenderMode::wireframe:
+  }
+  else if (rMode == RenderMode::wireframe)
+  {
     drawTriangle(triangle.p[0].x, triangle.p[0].y,
                 triangle.p[1].x, triangle.p[1].y,
                 triangle.p[2].x, triangle.p[2].y, triangle.color);
-    break;
-  default:
-    break;
-  };
+  }
 }
 
 float Engine::getClock()
@@ -1076,6 +1085,11 @@ void Engine::setSort(bool b)
 void Engine::setDither(bool v)
 {
   useDither = v;
+}
+
+void Engine::setVertexSnapping(bool enabled)
+{
+  enableVertexSnapping = enabled;
 }
 
 void Engine::setFogColor(const Color& new_color)

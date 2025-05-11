@@ -52,21 +52,15 @@ A C++ implementation of a PlayStation 1-style 3D engine that recreates the disti
 
 ## Building
 
-1.  **Clone the repository (if you haven't already):**
-    ```bash
-    git clone <repository-url>
-    cd <repository-directory>
-    ```
+1.  **Clone the repository**
 
 2.  **Create a build directory:**
-    It's standard practice to create a separate directory for CMake to place the build files.
     ```bash
     mkdir build
     cd build
     ```
 
 3.  **Configure the project using CMake:**
-    This command generates the native build system files (e.g., Makefiles on Linux/macOS, Visual Studio projects on Windows).
     ```bash
     cmake ..
     ```
@@ -77,7 +71,6 @@ A C++ implementation of a PlayStation 1-style 3D engine that recreates the disti
         ```
 
 4.  **Build the project:**
-    Use the build tool corresponding to the generated files.
     *   **Using Make (Linux/macOS):**
         ```bash
         make

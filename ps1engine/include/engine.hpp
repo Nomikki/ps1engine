@@ -69,6 +69,7 @@ public:
   void setSort(bool b);
   void setDither(bool v);
   void setFogColor(const Color& new_color);
+  void setVertexSnapping(bool enabled);
 
   bool checkIfAABBisOnScreen(AABB &aabb, mat4x4 &matWorld, mat4x4 &matView);
 
@@ -113,6 +114,7 @@ private:
   Color fogColor;
   float fogW;
   float clipEnd;
+  bool enableVertexSnapping;
 
   __m128 zero;
   size_t depthBufferSize;
