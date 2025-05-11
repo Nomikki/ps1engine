@@ -46,15 +46,62 @@ A C++ implementation of a PlayStation 1-style 3D engine that recreates the disti
 
 - SFML (Simple and Fast Multimedia Library)
 - C++17 or later
+- CMake (version 3.10 or later)
+- A C++ compiler that supports C++17 (e.g., GCC, Clang, MSVC)
 - SIMD support (SSE instructions)
 
 ## Building
 
-```bash
+1.  **Clone the repository (if you haven't already):**
+    ```bash
+    git clone <repository-url>
+    cd <repository-directory>
+    ```
 
-# Build
-make
-```
+2.  **Create a build directory:**
+    It's standard practice to create a separate directory for CMake to place the build files.
+    ```bash
+    mkdir build
+    cd build
+    ```
+
+3.  **Configure the project using CMake:**
+    This command generates the native build system files (e.g., Makefiles on Linux/macOS, Visual Studio projects on Windows).
+    ```bash
+    cmake ..
+    ```
+    *   You can specify the build type (e.g., Debug or Release) using `-DCMAKE_BUILD_TYPE`:
+        ```bash
+        cmake .. -DCMAKE_BUILD_TYPE=Release  # For an optimized build (default)
+        cmake .. -DCMAKE_BUILD_TYPE=Debug    # For a debug build
+        ```
+
+4.  **Build the project:**
+    Use the build tool corresponding to the generated files.
+    *   **Using Make (Linux/macOS):**
+        ```bash
+        make
+        ```
+    *   **Using MSBuild (Windows, if Visual Studio generators were used):**
+        Open the `.sln` file in Visual Studio and build, or use the command line:
+        ```bash
+        msbuild PS1Engine.sln /property:Configuration=Release 
+        # Replace PS1Engine.sln with the actual solution file name if different.
+        # The configuration (Release/Debug) should match what you used with cmake.
+        ```
+    *   **Using CMake's generic build command (cross-platform):**
+        This is often the simplest way to build after configuring.
+        ```bash
+        cmake --build . --config Release # Or --config Debug
+        ```
+
+5.  **Run the executable:**
+    The executable `PS1Engine` (or `PS1Engine.exe` on Windows) will be located in the `build` directory (or a subdirectory like `build/Release` or `build/Debug` depending on the generator and configuration).
+    ```bash
+    ./PS1Engine  # On Linux/macOS
+    # or
+    # Release\PS1Engine.exe # On Windows, if built in Release mode in a subdirectory
+    ```
 
 ## Usage
 
