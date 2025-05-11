@@ -612,9 +612,9 @@ void Engine::renderTriangle(Triangle &triangle, int textureID)
   {
     for (int i = 0; i < 3; ++i)
     {
-      triangle.p[i].x = roundf(triangle.p[i].x);
-      triangle.p[i].y = roundf(triangle.p[i].y);
-      // triangle.p[i].z = roundf(triangle.p[i].z); // Optional: snapping Z can affect depth precision
+      triangle.p[i].x = floorf(triangle.p[i].x);
+      triangle.p[i].y = floorf(triangle.p[i].y);
+      // triangle.p[i].z = floorf(triangle.p[i].z); // Optional: snapping Z can affect depth precision
     }
   }
 

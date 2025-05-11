@@ -85,6 +85,7 @@ int main(int argc, char *argv[]) {
   Engine *engine = new Engine(60, 4, "PS1 Model Viewer");
   engine->setSort(true);
   engine->setDither(true);
+  engine->setVertexSnapping(true);
   Camera *camera = new Camera();
   camera->pos = {0, 0, -10};
   camera->vTarget = {0, 0, 0};
